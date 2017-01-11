@@ -22,6 +22,7 @@ def _easyAddRowsWithCells(table,rowStyle,textCell1,textCell2):
     tr = _createAndAddElement(table,TableRow,stylename=rowStyle)
     _addCellsToRow(tr,textCell1,textCell2)
     return tr
+
 def _addCellsToRow(tr,textCell1,textCell2,addEmpty=False):
     if addEmpty:
         _createAndAddElement(tr,TableCell,valuetype="string").addElement(P(text=""))
@@ -30,6 +31,7 @@ def _addCellsToRow(tr,textCell1,textCell2,addEmpty=False):
 
 def _randomStringGen(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
+
 def generateODSFromCharacters(characters,grid=False,path=False):
     doc = OpenDocumentSpreadsheet()
     # lets generate the correct styles first. We start by creating the style for the columns of the grid
@@ -97,7 +99,6 @@ def generateODSFromCharacters(characters,grid=False,path=False):
                 characters[keyList[nextKey]].name,
                 True
             )
-        
         for atribute in atributes:
             insert=characters[keyList[key]].statPoints[atribute]
             if insert == 0:
@@ -115,7 +116,6 @@ def generateODSFromCharacters(characters,grid=False,path=False):
                     insert,
                     True
                 )
-            
         tableRows.append(
             _easyAddRowsWithCells(
                 table,
@@ -128,3 +128,6 @@ def generateODSFromCharacters(characters,grid=False,path=False):
         path = "./generated/"+_randomStringGen()+".ods"
     doc.save(path)
     return path
+
+
+
