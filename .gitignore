@@ -94,3 +94,9 @@ ENV/
 
 # Vim backup files
 *~
+
+# Generated ODF spreadsheets
+*.ods
+
+
+

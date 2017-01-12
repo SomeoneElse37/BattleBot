@@ -16,26 +16,6 @@ from random import randint, gauss
 from statistics import *
 from datetime import *
 
-# function roll(n) {
-#     if(n <= 10) {
-#         <insert the roll-and-add loop here>
-#     } else {
-#         return gauss() * sqrt(n) * sqrt(8.25) + n * 5.5;
-#     }
-# }
-#
-# function gauss() {
-#     float U = randUniform(0, 1);
-#     float V = randUniform(0, 1);
-#     return sqrt(-2 * ln(U)) * cos(2 * pi * V);
-# }
-
-# ((1/n sum(X1..Xn)) - mu) * sqrt(n) = N(0, variance(X))
-# (1/n sum(X1..Xn)) - mu = N(0, variance(X)) / sqrt(n)
-# 1/n sum(X1..Xn) = N(0, variance(X)) / sqrt(n) + mean(X)
-# sum(X1..Xn) = n * (N(0, variance(X)) / sqrt(n) + mean(X))
-# sum(X1..Xn) = (N(0, 1) * stdev(X) / sqrt(n) + mean(X)) * n
-
 def d10(times, sides):
     dice_list = []
     for foo in range(0, times):
@@ -552,7 +532,87 @@ class Modifier:
 
     __repr__ = __str__
 
+def sumThings(xs, data):
+    total = sum(xs)
+    return total, '{:d} = {!s}'.format(total, xs)
 
+def rollAccCheckForRPN(xs, data):
+    log, hit = prettyCheck(xs[0], xs[1], data['secrets'])
+    return (1 if hit else 0), log
+
+# Any data that parseRPN() could be expected to be able to look up from the beginning
+# By default, considers both "characters'" stats to be visible (because they don't really have stats to hide)
+baseData = {'secrets': (False, False)}
+
+# Operators and functions that parseRPN should have access to, even without any character context
+baseFunctions = {'+': (2, lambda xs, data: (xs[0] + xs[1], '')),
+        '-': (2, lambda xs, data: (xs[0] - xs[1], '')),
+        '*': (2, lambda xs, data: (xs[0] * xs[1], '')),
+        '/': (2, lambda xs, data: (xs[0] // xs[1], '')),
+        'sum': (-1, sumThings),
+        'roll': (1, lambda xs, data: prettyRoll(xs[0])[::-1]),                          # Rolls some d10s. Simple enough.
+        'rollh': (1, lambda xs, data: prettyRoll(xs[0], True)[::-1]),                   # Rolls some d10s, but hides the actual rolls.
+        'rollu': (1, lambda xs, data: prettyRoll(xs[0], data['secrets'][0])[::-1]),     # Hides the actual rolls if and only if the user's stats are hidden.
+        'rollt': (1, lambda xs, data: prettyRoll(xs[0], data['secrets'][1])[::-1]),     # Hides the actual rolls if and only if the target's stats are hidden.
+        'rollacc': (2, rollAccCheckForRPN),
+        'calcdmg': (2, lambda xs, data: damageString(xs[0], xs[1])[::-1]),
+        'rolldmg': (2, lambda xs, data: prettyDamage(xs[0], xs[1], data['secrets'])[::-1])}
+
+# Parses an RPN codex, with the specified context. data and functions will be merged with baseData and baseFunctions,
+# with the data and functions having precedence if any of the keys conflict.
+def parseRPN(codex, data = {}, functions = {}):
+    codex = [s.lower() for s in codex]
+    data = {**baseData, **data}
+    functions = {**baseFunctions, **functions}
+    stack = []
+    log = ''
+    for op in codex:
+        try:
+            stack.append(int(op))
+        except ValueError:
+            if op in data:
+                stack.append(data[op])
+            elif op in functions:
+                args, fn = functions[op]
+                par = []
+                if args >= 0:
+                    for i in range(args):
+                        par.append(stack.pop())
+                        par = par[::-1]
+                else:
+                    par = stack
+                    stack = []
+                retval, note = fn(par, data)
+                stack.append(retval)
+                if len(note) > 0:
+                    log += '\n' + note
+    if len(stack) == 1:
+        return stack[0], log
+    else:
+        raise ValueError('Expected stack to contain exactly one item after execution; got ' + str(stack))
+
+def testRPN(codex):
+    retval, log = parseRPN(codex)
+    return log + '\n\n' + str(retval)
+
+# These functions are formatted the same way as baseFunctions, but are aimed for use in abilities.
+auxFunctions = {
+        'hp':  (1, lambda xs, data: (xs[0].hp(), '')),
+        'acc': (1, lambda xs, data: (xs[0].acc(), '')),
+        'eva': (1, lambda xs, data: (xs[0].eva(), '')),
+        'atk': (1, lambda xs, data: (xs[0].atk(), '')),
+        'def': (1, lambda xs, data: (xs[0].dfn(), '')),
+        'spd': (1, lambda xs, data: (xs[0].spd(), '')),
+        'health': (1, lambda xs, data: (xs[0].health, '')),
+        'pos': (1, lambda xs, data: (xs[0].pos, '')),
+        'dist': (2, lambda xs, data: (distance(xs[0], xs[1]), '')),
+        }
+
+class Ability:
+    """Represents an Ability that a character may call upon at any time. On their turn, at least."""
+
+    def __init__(self):
+        self.steps = []
 
 class Character:
     """Represents a character known to BattleBot."""
@@ -1334,6 +1394,7 @@ Want to host BattleBot yourself, look at the sourcecode, or file a bug report? T
 /help modifier: How stat modifiers (i.e. buffs and debuffs) work
 /help ability: Deailed information on abilities and how to create them (coming soon!)
 /help rpn: Crash course on Reverse Polish Notation
+/help rpn: Details on BattleBot's take on RPN
 /help gm: Commands for GMs
 /help calc: Commands that roll dice and calculate stuff. Mostly obsoleted by all the above.
 
@@ -1461,7 +1522,7 @@ Unless they have no owner, which is also possible to do.
 
 RPN is a way to write mathematical formulae and such. It will seem a bit strange to anyone used to the familiar infix notation, but is very easy for computers to understand.
 RPN is a *postfix* notation, meaning that all operators come *after* the things they operate on. For example:
-2 3 4 + 5 - *
+/calc rpn 2 3 4 + 5 - *
 The interpreter will read this string with the help of a stack. Whenever it encounters a number, it will push that number onto the stack. After reading the 2, the stack will look like this:
 `[2]`
 Then, after the 3 and 4 are read:
@@ -1479,7 +1540,51 @@ And, finally, * will multiply the 2s.
 The input has been exhausted, and the stack has only one element. That whole formula thus evaluates to 4.
 And indeed, 2 * ((3 + 4) - 5) = 4.
 
-RPN allows math formulae to be written in a perfectly unambiguous manner that is very easy to parse. It's quite nice.""",
+RPN allows math formulae to be written in a perfectly unambiguous manner that is very easy to parse. It's quite nice.
+
+Type /help rpn2 for more details on exactly what operations BattleBot's RPN parser can perform.""",
+        'rpn2': """BattleBot RPN
+
+BattleBot's RPN parser has a number of operations that it can perform. First, the basics. These operators all pop two numbers off the stack, and push their result back on.
++ : Addition. Pretty simple.
+- : Subtraction. Note that the second number popped is the number the other is subtracted *from*- so "5 1 -" means the same thing as "5 - 1" equals 4. Not -4.
+        All the operators that take multiple arguments work this way. The first number pushed goes on the left hand side of the operator.
+* : Multiplies the two numbers. Simple.
+/ : Floor division. Divides, then rounds down (i.e. toward -infinity). "5 2 /" evaluates to 2.
+
+The rest of these have English names, and are not case-sensitive.
+sum: Add together ALL the numbers on the stack, and push the result back on as the only element in the stack.
+        So "1 2 3 4 5 sum" returns 15.
+
+roll: Takes one argument off the stack. Roll that namy d10s, and push the sum back on the stack.
+rollh: Like roll, except hide the individual rolls. Just return the sum.
+rollu: As above, but hide the rolls if the user's stats are secret.
+rollt: As above, but look at the target's secret status.
+rollacc: Perform an accuracy check. Take two arguments and roll that many d10s.
+calcdmg: If the two arguments are 50 and 20, return how much damage would be dealt if I rolled a 50 and you rolled a 20.
+rolldmg: Roll the two arguments, then call calcdmg on the results.
+
+All of the above commands are available to /calc rpn, so try them out yourself.
+For the RPN commands that really only make sense in the context of an ability, type /help rpn3.""",
+        'rpn3': """RPN Ability Commands
+
+These first few aren't operators, per se, as they take no arguments at all.
+self: The actual Character using this ability. Intended to be followed by one of the commands in the next section.
+target: The character targeted by this ability.
+locus: For an AOE ability, the location where the effect is centered. Not available otherwise.
+
+These all take one argument, extected to be a character (so... self or target).
+hp: The *maximum* HP of the character.
+acc: The Accuracy stat of the character. All modifiers and whatnot are properly taken into account.
+eva: Evasion stat.
+atk: Attack.
+def: Defense.
+spd: Speed.
+health: The character's *current* HP.
+pos: The character's position.
+
+And finally, with two arguments,
+dist: The Pythagorean straight-line distance between two locations (as returned by locus or pos). May be used to have the effect of an ability depend on the distance between the user and the target, or on the distance between the target and the epicenter of an AOE effect, etc. Go wild.""",
         'gm': """GM commands
 These commands/behaviors only function if you are a GM, meaning that you have either Administrator or Manage Messages permission on the server.
 
@@ -1521,7 +1626,8 @@ These just roll dice and calculate stuff. They have no effect on the battle at a
 /calc defaultstats: Print out the default stats for all the size tiers. Alias of /defaultstats.
 /calc testStatRoll n bucketSize: Test my new statical dice-rolling code against the count-and-add code by rolling n d10s.
     Returns a histogram. Each row is a bucket of bucketSize, collecting all rolls from one algorithm within its range.
-    The even-numbered rows correspond to the count-and-add algorithm; the odd ones to the new statistical algorithm."""}
+    The even-numbered rows correspond to the count-and-add algorithm; the odd ones to the new statistical algorithm.
+/calc rpn ...: Invoke BattleBot's RPN parser. Type /help rpn for more info."""}
 
 git_link = 'https://github.com/SomeoneElse37/BattleBot'
 
@@ -1560,6 +1666,8 @@ def getReply(content, message):
                 return stats(codex[1:])
             elif codex[0] == 'testStatRoll':
                 return testStatisticRolls(codex[1:])
+            elif codex[0] == 'rpn':
+                return testRPN(codex[1:])
         elif codex[0] == 'help':
             if len(codex) > 1:
                 key = codex[1].lower()
