@@ -586,6 +586,8 @@ def parseRPN(codex, data = {}, functions = {}):
                 stack.append(retval)
                 if len(note) > 0:
                     log += '\n' + note
+            else:
+                stack.append(op)
     if len(stack) == 1:
         return stack[0], log
     else:
@@ -606,13 +608,105 @@ auxFunctions = {
         'health': (1, lambda xs, data: (xs[0].health, '')),
         'pos': (1, lambda xs, data: (xs[0].pos, '')),
         'dist': (2, lambda xs, data: (distance(xs[0], xs[1]), '')),
+        '+mod': (3, lambda xs, data: ((xs[1], xs[0], xs[2], False), '')),
+        '-mod': (3, lambda xs, data: ((xs[1], -xs[0], xs[2], False), '')),
+        'mod%': (3, lambda xs, data: ((xs[1], xs[0] / 100, xs[2], True), '')),
+        '+mod%': (3, lambda xs, data: ((xs[1], 1 + xs[0] / 100, xs[2], True), '')),
+        '-mod%': (3, lambda xs, data: ((xs[1], 1 - xs[0] / 100, xs[2], True), '')),
         }
 
 class Ability:
     """Represents an Ability that a character may call upon at any time. On their turn, at least."""
 
-    def __init__(self):
+    # Codex format: abilityName range cooldown ((self | ally | enemy)+ | location) [limit]
+    def setFields(self, codex):
+        codex = [s.lower() for s in codex]
+        self.name = codex[0]
+        self.range = int(codex[1])
+        self.cooldown = int(codex[2])
+        if codex[3] == 'location':
+            self.targets = {'location'}
+            self.limit = int(codex[4])
+        else:
+            self.targets = set()
+            i = 3
+            try:
+                while codex[i] in {'self', 'ally', 'enemy'}:
+                    self.targets.add(codex[i])
+                    i += 1
+                self.limit = int(codex[-1])
+            except IndexError:  # No limit was given
+                self.limit = 1  # so, by default, will only permit one target
+
+
+    def __init__(self, codex):
+        self.setFields(codex)
         self.steps = []
+
+    # Each element in steps is a list of strings. The first is always 'calc', 'condition', or 'effect'.
+    # The second varies.
+    #   For calc, it's the name of the variable to be calculated and assigned.
+    #   For effect, it's what the effect is and who to apply it to (defaulting to 'target').
+    #   For condition, it's what to compare to (defaulting to '>0'), because
+    # In all cases, the above is followed by an RPN string wrapped up in a single list, describing what to calculate.
+    # This method takes a codex, in slightly-more-flexible user-friendly syntax, formats it as above, and returns it.
+    def parseStep(self, codex):
+        out = []
+        codex = [s.lower() for s in codex]
+        if codex[0] == 'calc':
+            out = codex[:2]
+            codex = codex[2:]
+        elif codex[1] == '=':
+            out = ['calc', codex[0]]
+            codex = codex[2:]
+        elif codex[0] == 'condition':
+            out = codex[0]
+            if codex[1] in {'>0', '=0', '<0', '~0', '>=0', '<=0'}:
+                out.append(codex[1])
+                codex = codex[2:]
+            elif codex[1] == '==0':
+                out.append('=0')
+                codex = codex[2:]
+            elif codex[1] in {'!0', '!=0', '~=0'}:
+                out.append('~0')
+                codex = codex[2:]
+            else:
+                out.append('>0')
+                codex = codex[1:]
+        elif codex[0] == 'effect':
+            out = codex[0]
+            codex = codex[1:]
+            if codex[0] in {'damage', 'apply'}:
+                out.append(codex[0])
+                codex = codex[1:]
+            else:
+                codex.append('apply')
+            if codex[0] in {'self', 'target'}:
+                out.append(codex[0])
+                codex = codex[1:]
+            else:
+                out.append('target')
+        out.append(codex)
+        return out
+
+
+    # Parameter to this method is the codex, straight from user input, with the keywords leading to this ability stripped off the front.
+    def setStep(self, codex):
+        try:
+            i = int(codex[0])
+            self.steps[i] = self.parseStep(codex[1:])
+        except ValueError:
+            name = ''
+            if codex[0] == 'calc':
+                name = codex[1]
+            elif codex[1] == '=':
+                name = codex[0]
+            if name != '':
+                for i, step in enumerate(self.steps):
+                    if step[0] == 'calc' and step[1] == name:
+                        self.steps[i] = self.parseStep(step)
+                        return
+            self.steps.append(self.parseStep(codex))
 
 class Character:
     """Represents a character known to BattleBot."""
@@ -1394,7 +1488,8 @@ Want to host BattleBot yourself, look at the sourcecode, or file a bug report? T
 /help modifier: How stat modifiers (i.e. buffs and debuffs) work
 /help ability: Deailed information on abilities and how to create them (coming soon!)
 /help rpn: Crash course on Reverse Polish Notation
-/help rpn: Details on BattleBot's take on RPN
+/help rpn2: Details on BattleBot's take on RPN
+/help rpn3: RPN operators only useful in abilities
 /help gm: Commands for GMs
 /help calc: Commands that roll dice and calculate stuff. Mostly obsoleted by all the above.
 
@@ -1568,6 +1663,8 @@ All of the above commands are available to /calc rpn, so try them out yourself.
 For the RPN commands that really only make sense in the context of an ability, type /help rpn3.""",
         'rpn3': """RPN Ability Commands
 
+First off, you should be aware that the RPN parser can handle several different types of values. Integers are parsed as, well, integers; anything that doesn't parse as an integer or match any of the operators will be parsed as a string; and some of the operators can return more complex objects.
+
 These first few aren't operators, per se, as they take no arguments at all.
 self: The actual Character using this ability. Intended to be followed by one of the commands in the next section.
 target: The character targeted by this ability.
@@ -1582,6 +1679,14 @@ def: Defense.
 spd: Speed.
 health: The character's *current* HP.
 pos: The character's position.
+
+Next, the modifier operators. All take three arguments, of the form [factor, stat, duration]. They do not affect anything right away, but the returned object can be applied to a character later on in the ability.
+They are +mod, -mod, mod%, +mod%, and -mod%. The syntax parallels that of /addModifier, described in /help gm. So I'll just give some examples in the RPN format here:
+    10 STR 3 +mod == +10 Strength for 3 turns
+    5 EVA 2 -mod == -5 Evasion for 2 turns
+    150 SPD 0 mod% == 150% Speed until end of turn
+    20 DEF 1 +mod% == +20% (== 120%) Defense for 1 turn
+    15 ACC -1 -mod% == -15% (== 85%) Accuracy until end of battle
 
 And finally, with two arguments,
 dist: The Pythagorean straight-line distance between two locations (as returned by locus or pos). May be used to have the effect of an ability depend on the distance between the user and the target, or on the distance between the target and the epicenter of an AOE effect, etc. Go wild.""",
