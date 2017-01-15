@@ -11,7 +11,7 @@ import traceback
 import pickle
 
 from sys import argv
-from random import randint, gauss
+from random import randint, gauss, shuffle
 
 from statistics import *
 from datetime import *
@@ -41,7 +41,7 @@ def statisticD10Sum(n):
 # In any case, returns a pair, (log, sum) of the sum of the dice rolled and a human-readable log of the rolls themselves
 def prettyRoll(n, secret=False):
     if not secret:
-        if n <= 300:
+        if n <= 100:
             rolls = d10(n, 10)
             return formatRoll(rolls), sum(rolls)
         else:
@@ -107,7 +107,7 @@ def calcDamage(atk, dfn):   # Takes the attack and defense STATS as parameters (
 
 def damageString(r1, r2):
     ratio = r1 / r2
-    dmg = math.ceil(ratio - 1)
+    dmg = max(math.ceil(ratio - 1), 0)
     out = "{:d}%: ".format(int(ratio * 100))
     if dmg == 0:
         return out + "The attack was blocked.", 0
@@ -436,6 +436,7 @@ def clampPosWithinField(pos, fieldSize):
 sizeTiers = {
         'faerie': 1,
         'elf': 2,
+        'human': 2,
         'werecat': 2,
         'elfcat': 2,
         'cyborg': 2,
@@ -461,7 +462,7 @@ def defaultStats(size):
 baseStats = {
         'faerie': defaultStats(sizeTiers['faerie']),    # This sets the base stats for each species to the default, computed from their size.
         'elf': defaultStats(sizeTiers['elf']),          # If Lens wants different base stats for any/all races, I can hardcode that easily.
-        'human': defaultStats(sizeTiers['elf']),        # Allowing GMs to set that up per-server is doable, but would take a bit more work.
+        'human': defaultStats(sizeTiers['human']),      # Allowing GMs to set that up per-server is doable, but would take a bit more work.
         'werecat': defaultStats(sizeTiers['werecat']),
         'elfcat': defaultStats(sizeTiers['elfcat']),
         'cyborg': defaultStats(sizeTiers['cyborg']),
@@ -496,6 +497,7 @@ class Modifier:
 
     def __init__(self, stat, factor=None, duration=None, isMult=None, holder=None, owner=None):
         if factor is None and duration is None and isMult is None:
+            print('The stat tuple is (in stat-factor-duration-isMult order): ' + str(stat))
             stat, factor, duration, isMult = stat   # Permit the first argument to be a tuple containing (stat, factor, duration, isMult), and ignoring the rest
         self.stat = stat.upper()
         self.factor = factor
@@ -524,6 +526,12 @@ class Modifier:
     def __eq__(self, other):
         return self is other
 
+    def short(self):
+        if self.isMult:
+            return '{:d}% {}'.format(int(self.factor * 100), self.stat)
+        else:
+            return '{:+d} {}'.format(self.factor, self.stat)
+
     def __str__(self):
         if self.isMult:
             return '{:d}% ({:d})'.format(int(self.factor * 100), self.duration)
@@ -534,29 +542,34 @@ class Modifier:
 
 def sumThings(xs, data):
     total = sum(xs)
-    return total, '{:d} = {!s}'.format(total, xs)
+    return [total], '{:d} = {!s}'.format(total, xs)
+
+def flip(pair):
+    a, b = pair
+    return [b], a
 
 def rollAccCheckForRPN(xs, data):
     log, hit = prettyCheck(xs[0], xs[1], data['secrets'])
-    return (1 if hit else 0), log
+    return [(1 if hit else 0)], log
 
 # Any data that parseRPN() could be expected to be able to look up from the beginning
 # By default, considers both "characters'" stats to be visible (because they don't really have stats to hide)
 baseData = {'secrets': (False, False)}
 
 # Operators and functions that parseRPN should have access to, even without any character context
-baseFunctions = {'+': (2, lambda xs, data: (xs[0] + xs[1], '')),
-        '-': (2, lambda xs, data: (xs[0] - xs[1], '')),
-        '*': (2, lambda xs, data: (xs[0] * xs[1], '')),
-        '/': (2, lambda xs, data: (xs[0] // xs[1], '')),
+baseFunctions = {'+': (2, lambda xs, data: ([xs[0] + xs[1]], '')),
+        '-': (2, lambda xs, data: ([xs[0] - xs[1]], '')),
+        '*': (2, lambda xs, data: ([xs[0] * xs[1]], '')),
+        '/': (2, lambda xs, data: ([xs[0] / xs[1]], '')),
+        '//': (2, lambda xs, data: ([int(xs[0] // xs[1])], '')),
         'sum': (-1, sumThings),
-        'roll': (1, lambda xs, data: prettyRoll(xs[0])[::-1]),                          # Rolls some d10s. Simple enough.
-        'rollh': (1, lambda xs, data: prettyRoll(xs[0], True)[::-1]),                   # Rolls some d10s, but hides the actual rolls.
-        'rollu': (1, lambda xs, data: prettyRoll(xs[0], data['secrets'][0])[::-1]),     # Hides the actual rolls if and only if the user's stats are hidden.
-        'rollt': (1, lambda xs, data: prettyRoll(xs[0], data['secrets'][1])[::-1]),     # Hides the actual rolls if and only if the target's stats are hidden.
+        'roll': (1, lambda xs, data: flip(prettyRoll(xs[0]))),                          # Rolls some d10s. Simple enough.
+        'rollh': (1, lambda xs, data: flip(prettyRoll(xs[0], True))),                   # Rolls some d10s, but hides the actual rolls.
+        'rollu': (1, lambda xs, data: flip(prettyRoll(xs[0], data['secrets'][0]))),     # Hides the actual rolls if and only if the user's stats are hidden.
+        'rollt': (1, lambda xs, data: flip(prettyRoll(xs[0], data['secrets'][1]))),     # Hides the actual rolls if and only if the target's stats are hidden.
         'rollacc': (2, rollAccCheckForRPN),
-        'calcdmg': (2, lambda xs, data: damageString(xs[0], xs[1])[::-1]),
-        'rolldmg': (2, lambda xs, data: prettyDamage(xs[0], xs[1], data['secrets'])[::-1])}
+        'calcdmg': (2, lambda xs, data: flip(damageString(xs[0], xs[1]))),
+        'rolldmg': (2, lambda xs, data: flip(prettyDamage(xs[0], xs[1], data['secrets'])))}
 
 # Parses an RPN codex, with the specified context. data and functions will be merged with baseData and baseFunctions,
 # with the data and functions having precedence if any of the keys conflict.
@@ -566,28 +579,31 @@ def parseRPN(codex, data = {}, functions = {}):
     functions = {**baseFunctions, **functions}
     stack = []
     log = ''
-    for op in codex:
-        try:
-            stack.append(int(op))
-        except ValueError:
-            if op in data:
-                stack.append(data[op])
-            elif op in functions:
-                args, fn = functions[op]
-                par = []
-                if args >= 0:
-                    for i in range(args):
-                        par.append(stack.pop())
-                        par = par[::-1]
+    try:
+        for op in codex:
+            try:
+                stack.append(int(op))
+            except ValueError:
+                if op in data:
+                    stack.append(data[op])
+                elif op in functions:
+                    args, fn = functions[op]
+                    par = []
+                    if args >= 0:
+                        for i in range(args):
+                            par.append(stack.pop())
+                            par = par[::-1]
+                    else:
+                        par = stack
+                        stack = []
+                    retvals, note = fn(par, data)
+                    stack.extend(retvals)
+                    if len(note) > 0:
+                        log += '\n' + note
                 else:
-                    par = stack
-                    stack = []
-                retval, note = fn(par, data)
-                stack.append(retval)
-                if len(note) > 0:
-                    log += '\n' + note
-            else:
-                stack.append(op)
+                    log += '\nUnrecognized operator:' + op
+    except (IndexError, TypeError) as e:
+        raise RuntimeError('There was an error!', e, log, stack)
     if len(stack) == 1:
         return stack[0], log
     else:
@@ -597,23 +613,44 @@ def testRPN(codex):
     retval, log = parseRPN(codex)
     return log + '\n\n' + str(retval)
 
+# Used in the auxFunctions list to get a stat from an object, and format the result as parseRPN expects.
+# Unless the object isn't a character, in which case just return the object and the stat.
+# This would be so much easier in Haskell, where I don't need to go so far out of my way to curry functions with if statements in them...
+def getstat(stat, alt, xs):
+    try:
+        return [getattr(xs[0], alt)()]
+    except AttributeError:
+        return [xs[0], stat]
+
+def statgetter(stat, alt=None):
+    if alt is None:
+        alt = stat
+    return lambda xs, data: (getstat(stat, alt, xs), '')
+
 # These functions are formatted the same way as baseFunctions, but are aimed for use in abilities.
 auxFunctions = {
-        'hp':  (1, lambda xs, data: (xs[0].hp(), '')),
-        'acc': (1, lambda xs, data: (xs[0].acc(), '')),
-        'eva': (1, lambda xs, data: (xs[0].eva(), '')),
-        'atk': (1, lambda xs, data: (xs[0].atk(), '')),
-        'def': (1, lambda xs, data: (xs[0].dfn(), '')),
-        'spd': (1, lambda xs, data: (xs[0].spd(), '')),
-        'health': (1, lambda xs, data: (xs[0].health, '')),
-        'pos': (1, lambda xs, data: (xs[0].pos, '')),
-        'dist': (2, lambda xs, data: (distance(xs[0], xs[1]), '')),
-        '+mod': (3, lambda xs, data: ((xs[1], xs[0], xs[2], False), '')),
-        '-mod': (3, lambda xs, data: ((xs[1], -xs[0], xs[2], False), '')),
-        'mod%': (3, lambda xs, data: ((xs[1], xs[0] / 100, xs[2], True), '')),
-        '+mod%': (3, lambda xs, data: ((xs[1], 1 + xs[0] / 100, xs[2], True), '')),
-        '-mod%': (3, lambda xs, data: ((xs[1], 1 - xs[0] / 100, xs[2], True), '')),
-        }
+        'hp':  (1, statgetter('hp')),
+        'acc': (1, statgetter('acc')),
+        'eva': (1, statgetter('eva')),
+        'atk': (1, statgetter('atk')),
+        'def': (1, statgetter('def', 'dfn')),
+        'spd': (1, statgetter('spd')),
+        'health': (1, lambda xs, data: ([xs[0].health], '')),
+        'pos': (1, lambda xs, data: ([xs[0].pos], '')),
+        'dist': (2, lambda xs, data: ([distance(xs[0], xs[1])], '')),
+        '+mod': (3, lambda xs, data: ([(xs[2], xs[0], xs[1], False)], '')),
+        '-mod': (3, lambda xs, data: ([(xs[2], -xs[0], xs[1], False)], '')),
+        'mod%': (3, lambda xs, data: ([(xs[2], xs[0] / 100, xs[1], True)], '')),
+        '+mod%': (3, lambda xs, data: ([(xs[2], 1 + xs[0] / 100, xs[1], True)], '')),
+        '-mod%': (3, lambda xs, data: ([(xs[2], 1 - xs[0] / 100, xs[1], True)], ''))}
+# stat, factor, duration, isMult
+comparisons = {
+        '<0': lambda n: n < 0,
+        '==0': lambda n: n == 0,
+        '>0': lambda n: n > 0,
+        '<=0': lambda n: n <= 0,
+        '!=0': lambda n: n != 0,
+        '>=0': lambda n: n >= 0}
 
 class Ability:
     """Represents an Ability that a character may call upon at any time. On their turn, at least."""
@@ -621,15 +658,15 @@ class Ability:
     # Codex format: abilityName range cooldown ((self | ally | enemy)+ | location) [limit]
     def setFields(self, codex):
         codex = [s.lower() for s in codex]
-        self.name = codex[0]
-        self.range = int(codex[1])
-        self.cooldown = int(codex[2])
-        if codex[3] == 'location':
+        self.range = int(codex[0])
+        self.cooldown = int(codex[1])
+        self.timeout = 0
+        if codex[2] == 'location' or codex[2] == 'aoe':
             self.targets = {'location'}
-            self.limit = int(codex[4])
+            self.limit = int(codex[3])
         else:
             self.targets = set()
-            i = 3
+            i = 2
             try:
                 while codex[i] in {'self', 'ally', 'enemy'}:
                     self.targets.add(codex[i])
@@ -640,8 +677,10 @@ class Ability:
 
 
     def __init__(self, codex):
-        self.setFields(codex)
+        self.name = codex[0]
+        self.setFields(codex[1:])
         self.steps = []
+        self.flavor = ''
 
     # Each element in steps is a list of strings. The first is always 'calc', 'condition', or 'effect'.
     # The second varies.
@@ -660,40 +699,51 @@ class Ability:
             out = ['calc', codex[0]]
             codex = codex[2:]
         elif codex[0] == 'condition':
-            out = codex[0]
-            if codex[1] in {'>0', '=0', '<0', '~0', '>=0', '<=0'}:
+            out = [codex[0]]
+            if codex[1] in comparisons:
                 out.append(codex[1])
                 codex = codex[2:]
-            elif codex[1] == '==0':
-                out.append('=0')
+            elif codex[1] == '=0':
+                out.append('==0')
                 codex = codex[2:]
-            elif codex[1] in {'!0', '!=0', '~=0'}:
-                out.append('~0')
+            elif codex[1] == '!0':
+                out.append('!=0')
                 codex = codex[2:]
             else:
                 out.append('>0')
                 codex = codex[1:]
         elif codex[0] == 'effect':
-            out = codex[0]
+            out = [codex[0]]
             codex = codex[1:]
             if codex[0] in {'damage', 'apply'}:
                 out.append(codex[0])
                 codex = codex[1:]
             else:
-                codex.append('apply')
+                out.append('apply')
             if codex[0] in {'self', 'target'}:
                 out.append(codex[0])
                 codex = codex[1:]
             else:
                 out.append('target')
+        else:
+            raise ValueError('Invalid /editability command: {}'.format(codex[0]))
         out.append(codex)
         return out
 
 
     # Parameter to this method is the codex, straight from user input, with the keywords leading to this ability stripped off the front.
+    # Will replace the Nth step if the first parameter is N; the step to calculate var if there is a step that does that; or just add the new step to the end of the list otherwise.
     def setStep(self, codex):
+        cmd = codex[0].lower()
+        if cmd == 'flavor':
+            self.flavor = ' '.join(codex[1:])
+            return
+        elif cmd == 'delete':
+            i = int(codex[1]) - 1
+            del self.steps[i]
+            return
         try:
-            i = int(codex[0])
+            i = int(codex[0]) - 1
             self.steps[i] = self.parseStep(codex[1:])
         except ValueError:
             name = ''
@@ -704,9 +754,81 @@ class Ability:
             if name != '':
                 for i, step in enumerate(self.steps):
                     if step[0] == 'calc' and step[1] == name:
-                        self.steps[i] = self.parseStep(step)
+                        self.steps[i] = self.parseStep(codex)
                         return
             self.steps.append(self.parseStep(codex))
+
+    # Step format: ("calc" var | "condition" cond | "effect" ("damage" | "apply") ("self" | "target")) \[ RPN commands ... \]
+    def executeInner(self, user, target, locus=None):
+        data = dict(self=user, target=target, secrets=(user.secret, target.secret))
+        log = 'Targeting {}:'.format(target.name)
+        if locus is not None:
+            data['locus'] = locus
+        for step in self.steps:
+            result, flavor = parseRPN(step[-1], data=data, functions=auxFunctions)
+            if len(flavor) > 0:
+                log += '\n' + flavor
+            if step[0] == 'calc':
+                data[step[1]] = result
+            elif step[0] == 'condition':
+                log += '\n{:d} {} 0: '.format(result, step[1][:-1])
+                if comparisons[step[1]](result):
+                    log += 'Pass'
+                else:
+                    log += 'Fail'
+                    break
+            elif step[0] == 'effect':
+                char = target if step[2] == 'target' else user
+                if step[1] == 'damage':
+                    char.health -= result
+                    char.health = max(char.health, 0)
+                    log += '\nDealt {:d} damage. {} is now at {:d} health.'.format(result, char.name, char.health)
+                else:
+                    mod = Modifier(result, owner=user, holder=char)
+                    log += '\n{} gets {} for {:d} turns.'.format(char.name, mod.short(), mod.duration)
+        return log
+
+    def execute(self, user, participants, targets=None, locus=None):
+        if self.timeout > 0:
+            raise ValueError('This ability is on cooldown for {:d} more turns.'.format(self.timeout))
+        if locus is not None:
+            if user.distanceTo(locus) <= self.range:
+                targets = [char for char in participants if char.distanceTo(locus) <= self.limit]
+                shuffle(targets)
+            else:
+                raise ValueError('That location is {:d} tiles away from you. This ability has a range of {:d}.'.format(user.distanceTo(locus), self.range))
+        else:
+            if len(targets) <= self.limit:
+                for char in targets:
+                    if user.distanceTo(char.pos) > self.range:
+                        raise ValueError('{} is {:d} tiles away from you. This ability has a range of {:d}.'.format(char.name, user.distanceTo(char.pos), self.range))
+                    if char not in participants:
+                        raise ValueError('{} is not participating in this battle!'.format(char.name))
+            else:
+                raise ValueError('Too many targets. Requires {:d} or less; got {:d}.'.format(self.limit, len(targets)))
+        log = ''
+        for char in targets:
+            nextLog = self.executeInner(user, char, locus)
+            log += '\n\n' + nextLog
+        self.timeout = self.cooldown + 1
+        return log
+
+    def __str__(self):
+        out = 'Range: {:d}, Cooldown: {:d}({:d}), Targets: {!s}, Limit: {:d}'.format(self.range, self.cooldown, self.timeout, self.targets, self.limit)
+        if len(self.flavor) > 0:
+            out += '\n  ' + self.flavor
+        for i, step in enumerate(self.steps):
+            out += '\n {:3d}: '.format(i + 1)
+            # out += str(step)
+            rpn = step[-1]
+            step = step[:-1]
+            step.extend(rpn)
+            for cmd in step:
+                out += cmd + ' '
+        return out
+
+    def __repr__(self):
+        return '{} ({:d})'.format(self.name, self.timeout)
 
 class Character:
     """Represents a character known to BattleBot."""
@@ -724,7 +846,8 @@ class Character:
     def __init__(self, owner, name, race, statpoints, secret=False):
         if not race in sizeTiers:
             raise ValueError("Invalid race.")
-        self.username = owner.mention
+        self.mention = owner.mention
+        self.username = owner.display_name
         self.userid = owner.id
         self.name = name
         self.race = race.lower()
@@ -740,7 +863,7 @@ class Character:
         # Negative durations last forever.
         self.clearModifiers()
         self.ownedModifiers = []
-        #self.abilities = []     # Ability system is planned, but NYI
+        self.abilities = {}
         self.health = self.hp()
         self.pos = (0, 0)       # X and Y coordinates
         self.secret = secret    # If true, this character's stats will not be reported to players (used for some NPCs)
@@ -812,6 +935,15 @@ class Character:
         for m in self.ownedModifiers:
             m.tick()
 
+    def tickAbilities(self):
+        for a in self.abilities.values():
+            if a.timeout > 0:
+                a.timeout -= 1
+
+    def clearTimeouts(self):
+        for a in self.abilities.values():
+            a.timeout = 0
+
     def __str__(self):
         s1 = '...'
         s2 = '...'
@@ -825,13 +957,15 @@ Race: {:s}
 Size Tier: {:d}
 Stat Points: [{:s}]
 Current Stats: [{:s}]
+Abilities: {!s}
 Location: ({:d}, {:d})
-Health: {:d}""".format(self.username, self.userid, self.name, self.race, self.size, s1, s2, self.pos[0], self.pos[1], self.health)
+Health: {:d}""".format(self.username, self.userid, self.name, self.race, self.size, s1, s2, list(self.abilities.values()), self.pos[0], self.pos[1], self.health)
 
     # Reset health to the maximum, and clear all modifiers.
     def respawn(self):
         self.health = self.hp()
         self.clearModifiers()
+        self.clearTimeouts()
 
     # Rolls an accuracy check against this character. Used in some of the methods below, and I plan to make this available to GMs
     # directly for special attacks.
@@ -870,14 +1004,20 @@ Health: {:d}""".format(self.username, self.userid, self.name, self.race, self.si
     # If maxDist is positive, the Character will try to move exactly that distance, continuing beyond the end of the path if necessary and ignoring the stop parameter.
     # If stop == False, when the Character reaches the end of the path, they will continue moving in that direction as far as the speed roll and maxDist permit.
     # size is the size of the battlefield
-    def testMove(self, path, maxDist, stop, size):
-        out, dist = prettyRoll(self.spd(), secret=self.secret)
-        pos = self.pos
+    def testMove(self, path, maxDist, stop, size, skipRoll=False):
+        if skipRoll:
+            out = ''
+            dist = float('inf')
+        else:
+            out, dist = prettyRoll(self.spd(), secret=self.secret)
         if maxDist >= 0:        # Set the distance to travel to either the roll or the maxDist parameter, if given, whichever is less.
             dist = min(dist, maxDist)
             stop = False
-        elif stop:    # If the character is intended to stop at the end of the path, ensure that the last waypoint is "go nowhere"
+        elif skipRoll:  # If we skipped the roll, then we'd better not try to go beyond the end of the path without some limit
+            stop = True
+        if stop:        # If the character is intended to stop at the end of the path, ensure that the last waypoint is "go nowhere"
             path.append((0, 0))
+        pos = self.pos
         for i in range(len(path) - 1):  # Last coordinate in the path is treated differently, so don't iterate through it here
             mag = magnitude(path[i])
             if mag >= dist:
@@ -892,28 +1032,28 @@ Health: {:d}""".format(self.username, self.userid, self.name, self.race, self.si
         pos = clampPosWithinField(pos, size)
         return out + '\nMoved from {!s} to {!s}'.format(self.pos, pos), pos
 
+    def listAbilities(self):
+        out = ''
+        for v in self.abilities.values():
+            out += v.name + ':   '
+            if self.secret:
+                out += '...\n'
+            else:
+                out += str(v) + '\n\n'
+        return out
+
+    def distanceTo(self, pos):
+        return distance(pos, self.pos)
+
     # Will be fancier once abilities are in
     def canMelee(self, pos):
-        return distance(pos, self.pos) < BASE_RANGE
+        return self.distanceTo(pos) <= 1.5  # sqrt(2) ~= 1.414
 
     def inBox(self, minX, maxX, minY, maxY):
         return minX <= self.pos[0] <= maxX and minY <= self.pos[1] <= maxY
 
-    # # Retreat ability. Roll speed, and add the result to this chracter's location. Return (logstring, newLocation)
-    # def retreat(self, limit=-1):
-    #     out, self.location = prettyRetreat(self.location, self.spd(), limit=limit, secret=self.secret)
-    #     return out, self.location
-
-    # # Target-free approach ability. Roll speed, and subtract the result from this chracter's location. Return (logstring, newLocation)
-    # def approachCenter(self, limit=-1):
-    #     out, self.location = prettyApproachCenter(self.location, self.spd(), limit=limit, secret=self.secret)
-    #     return out, self.location
-
-    # # Targeted approach ability. Roll speed, and move the user and the target toward the center. This character is the PURSUER, NOT the target.
-    # # Return (logString, newUserLocation, newTargetLocation)
-    # def approachChar(self, target, limit=-1):
-    #     out, self.location, target.location = prettyApproachChar(self.location, self.spd(), target.location, limit=limit, secret=self.secret)
-    #     return out, self.location, target.location
+    def createAbility(self, codex):
+        self.abilities[codex[0].lower()] = Ability(codex)
 
     def __eq__(self, other):
         return self.userid == other.userid and self.name == other.name
@@ -995,7 +1135,7 @@ class Battle:
             return self.participants[self.turn]
 
     def currentCharPretty(self):
-        return 'It is ' + self.currentChar().name + "'s turn. " + self.participants[self.turn].username
+        return 'It is ' + self.currentChar().name + "'s turn. " + self.participants[self.turn].mention
 
     def __str__(self):
         out = self.name + ' (' + self.id + ')\n'
@@ -1036,6 +1176,7 @@ class Battle:
 
     def passTurn(self):
         self.currentChar().tickModifiers()
+        self.currentChar().tickAbilities()
         self.moved = False
         self.attacked = False
         if self.turn == -1:
@@ -1063,7 +1204,7 @@ class Battle:
         target = self.characters[targetName.lower()]
         if target not in self.participants:
             return target.name + ' is not participating in the battle!'
-        if distance(user.pos, target.pos) > BOXING_MAX:
+        if not user.canMelee(target.pos):
             return target.name + ' is too far away!'
         out, damage = target.rollFullAttack(user.acc(), user.atk(), secret=user.secret)
         if target.health <= 0:
@@ -1148,6 +1289,49 @@ class Battle:
         out += self.availableActions()
         if self.attacked:
             self.passTurn()
+        return out
+
+    def useAbility(self, codex):
+        if self.attacked:
+            return self.availableActions()
+        user = self.currentChar()
+        ability = user.abilities[codex[0].lower()]
+        codex = codex[1:]
+        out = ''
+        try:
+            if 'location' in ability.targets:
+                path, maxDist, stop = self.parseDirectionList(user.pos, codex)
+                out, locus = user.testMove(path, maxDist, stop, self.size, True)
+                out += ability.execute(user, self.participants, locus=locus)
+            else:
+                if len(codex) == 0:     # No targets given
+                    if 'self' not in ability.targets:
+                        raise ValueError('No targets given for an ability that cannot target its user.')
+                    out = ability.execute(user, self.participants, targets=[user])
+                else:
+                    targets = []
+                    for name in codex:
+                        char = self.characters[name.lower()]
+                        if char is user:
+                            if 'self' not in ability.targets:
+                                raise ValueError('You cannot target yourself with this ability.')
+                        else:
+                            if 'ally' not in ability.targets and 'enemy' not in ability.targets:     # BattleBot has no way to know who is an ally and who is an enemy (yet)
+                                raise ValueError('You cannot target {} with this ability.'.format(char.name))
+                        targets.append(char)
+                    out = ability.execute(user, self.participants, targets=targets)
+            for char in self.participants:
+                if char.health <= 0:
+                    self.removeParticipantByChar(char)
+                    char.respawn()
+            self.attacked = True
+            out += self.availableActions()
+            if self.moved:
+                self.passTurn()
+        except ValueError as e:
+            return str(e)
+        except KeyError as e:
+            return 'Character not found: {}'.format(e.args[0])
         return out
 
     def genMap(self, corner1, corner2, scale=1):
@@ -1247,7 +1431,10 @@ def battleStatus(codex, author):
 
 def charData(codex, author):
     battle = database[author.server.id]
-    return str(battle.characters[codex[0].lower()])
+    char = battle.characters[codex[0].lower()]
+    if char.userid == author.id:
+        char.username = author.display_name
+    return str(char)
 
 def info(codex, author):
     if len(codex) == 0:
@@ -1280,7 +1467,7 @@ def passTurn(codex, author):
         battle.passTurn()
         return 'Turn passed successfully.\n\n' + battle.currentCharPretty()
     else:
-        return "You need Manage Messages or Administrator permission to take control of players' characters!"
+        return "You need Manage Messages or Administrator permission to take control of other players' characters!"
 
 def basicAttack(codex, author):
     battle = database[author.server.id]
@@ -1288,7 +1475,7 @@ def basicAttack(codex, author):
     if author.id == char.userid or author.server_permissions.administrator or author.server_permissions.manage_messages:
         return battle.basicAttack(codex[0]) + '\n\n' + battle.currentCharPretty()
     else:
-       return "You need Manage Messages or Administrator permission to take control of players' characters!"
+        return "You need Manage Messages or Administrator permission to take control of other players' characters!"
 
 def move(codex, author):
     battle = database[author.server.id]
@@ -1296,7 +1483,54 @@ def move(codex, author):
     if author.id == char.userid or author.server_permissions.administrator or author.server_permissions.manage_messages:
         return battle.move(codex) + '\n\n' + battle.currentCharPretty()
     else:
-       return "You need Manage Messages or Administrator permission to take control of players' characters!"
+        return "You need Manage Messages or Administrator permission to take control of other players' characters!"
+
+# Use an ability.
+def useAbility(codex, author):
+    battle = database[author.server.id]
+    char = battle.currentChar()
+    if author.id == char.userid or author.server_permissions.administrator or author.server_permissions.manage_messages:
+        return battle.useAbility(codex) + '\n\n' + battle.currentCharPretty()
+    else:
+        return "You need Manage Messages or Administrator permission to take control of other players' characters!"
+
+def createAbility(codex, author):
+    battle = database[author.server.id]
+    char = battle.characters[codex[0].lower()]
+    isGM = author.server_permissions.administrator or author.server_permissions.manage_messages
+    if author.id == char.userid or isGM:
+        if char not in battle.participants or isGM:
+            try:
+                abl = char.abilities[codex[1].lower()]
+                abl.setFields(codex[2:])
+                return str(abl)
+            except KeyError:
+                abl = Ability(codex[1:])
+                char.abilities[abl.name.lower()] = abl
+                return str(abl)
+        else:
+            return "You need Manage Messages or Administrator permission to modify characters during a battle!"
+    else:
+        return "You need Manage Messages or Administrator permission to modify other players' characters!"
+
+def editAbility(codex, author):
+    battle = database[author.server.id]
+    char = battle.characters[codex[0].lower()]
+    isGM = author.server_permissions.administrator or author.server_permissions.manage_messages
+    if author.id == char.userid or isGM:
+        if char not in battle.participants or isGM:
+            abl = char.abilities[codex[1]]
+            abl.setStep(codex[2:])
+            return str(abl)
+        else:
+            return "You need Manage Messages or Administrator permission to modify characters during a battle!"
+    else:
+        return "You need Manage Messages or Administrator permission to modify other players' characters!"
+
+def abilities(codex, author):
+    battle = database[author.server.id]
+    char = battle.characters[codex[0].lower()]
+    return char.listAbilities()
 
 # /map
 # /map scale
@@ -1340,11 +1574,13 @@ def showMap(codex, author):
 def restat(codex, author):
     battle = database[author.server.id]
     char = battle.characters[codex[0].lower()]
-    if author.id == char.userid or author.server_permissions.administrator or author.server_permissions.manage_messages:
-        if char not in battle.participants:
+    isGM = author.server_permissions.administrator or author.server_permissions.manage_messages
+    if author.id == char.userid or isGM:
+        if char not in battle.participants or isGM:
             char.statPoints = makeStatsFromCodex(codex[1:])
             return str(char) + '\n\n{:d} stat points used.'.format(sum(char.statPoints.values()))
-        return "You need Manage Messages or Administrator permission to restat your character during a battle!"
+        else:
+            return "You need Manage Messages or Administrator permission to restat your characters during a battle!"
     else:
         return "You need Manage Messages or Administrator permission to restat other players' characters!"
 
@@ -1486,7 +1722,9 @@ Want to host BattleBot yourself, look at the sourcecode, or file a bug report? T
 /help map: Detailed information on the /map command
 /help stats: How stats work in BattleBot
 /help modifier: How stat modifiers (i.e. buffs and debuffs) work
-/help ability: Deailed information on abilities and how to create them (coming soon!)
+/help ability: Deailed information on abilities and how to create them
+/help ability2: The /editability command
+/help ability3: An exaple ability
 /help rpn: Crash course on Reverse Polish Notation
 /help rpn2: Details on BattleBot's take on RPN
 /help rpn3: RPN operators only useful in abilities
@@ -1508,6 +1746,7 @@ These commands are usable by all players, and do not typically have any impact o
 /list: List a bunch of info about the current state of the battle- who's participating, turn order, etc.
 /list name: Show all the info about the named character.
 /modifiers name: Show all modifiers on the named character.
+/abilities name: Show all of the abilities the named character has.
 /invite: Show BattleBot's invite link.
 /github: Show the link to this bot's sourcecode on GitHub.""",
         'battle': """Battle Commands
@@ -1517,7 +1756,8 @@ These commands are to be used during battle, and can only be used by the active 
     This and the next few commands only work during your turn.
 /move ...: Move along the specified path, as far as your speed roll allows.
     See /help move for info on the path syntax.
-/ability ...: Use an ability. Not yet implemented, but coming soon!
+/ability abilityName [name ... | path]: Use an ability on the given targets, at the location at the end of the path, or on yourself if no targets or path are given.
+    Path syntax is exactly the same as in /move.
 /pass: Pass your turn. Simple enough.
 
 Note: During their turn, the active player may use both /move AND either /attack or /ability, if they wish (although they cannot use /attack and /ability in the same turn).""",
@@ -1610,9 +1850,75 @@ A newly-created modifier with duration N is guaranteed to last exactly N full tu
 Also note that modifiers whose durations are already negative will never decay. They are only cleared at the end of a battle (again, barring ability shenanigans).
 
 Also, modifiers instantly vanish the moment their owner dies. Because otherwise, modifiers whose creators died would never expire, and that would be weird.
-Unless they have no owner, which is also possible to do.
-""",
-        'ability': """**Not Yet Implemented**""",
+Unless they have no owner, which is also possible to do.""",
+        'ability': """Abilities
+
+BattleBot's ability system uses four commands.
+/ability abilityName [targets | path]: Use an ability. An ability that is still on cooldown cannot be used
+        until the cooldown expires; but otherwise, the restrictions on this are the same as for /attack.
+    If it's a targeted ability, you can give it a list of targets. If none are given, targets yourself by default.
+    If it's an AoE ability, give it a path to where you want the effect to be focused.
+            The path syntax is exactly the same as that described in /help move.
+/abilities name: List all of that character's abilities.
+/makeability name abilityName range cooldown targetTypes [limit]: Create an ability, or change these fields
+        of an ability that already exists.
+    name: The name of the character that will have this ability.
+    abilityName: The name of the ability.
+    range: The maximum permissible distance between you and your target(s).
+    cooldown: How many turns this ability will not be available after using it.
+        Cooldown 1 means that you will not be able to use the ability again for one turn after using it
+                (so you can use it every other turn).
+        Cooldown 0 is no cooldown.
+    targetTypes: Can take one of two forms.
+        If "location" or "aoe", the ability will be an AoE ability aimed at a location in the grid.
+        If not, then targetTypes must be "self", "ally", "enemy", or some combination thereof,
+                such as "self ally" or "ally enemy".
+            This restricts who the ability can target. Note that BattleBot does not have any way to know
+            who is an ally and who is an enemy (yet), so "ally" and "enemy" are equivalent.
+    limit: For AoE abilities, the radius of the affected area. For targeted abilities, the maximum number of targets.
+            Deaults to 1.
+/editability: See /help ability2""",
+        'ability2': """The /editability Command
+
+/editability name abilityName [n] action rpn ...: Edits the sequence of steps that the ability performs for each target.
+    n: If given, replace line n rather than appending step n to the end of the list.
+    rpn: The last parameter to /editability must be an RPN expression. It is executed whenever the ability is used,
+            and its return value determines what will happen. See /rpn for details.
+    action: What this step of the ability is supposed to do. Can take any one of the following formats:
+        calc var: Executes the RPN expression, and stores its result in a variable called var for use in later steps.
+            If the ability already has a step to calculate var, replace that step.
+        var =: Same as calc var. Yes, that has to be a single equals sign.
+        condition [cmp]: Compare the RPN result to 0 in one of six ways. If false, then stop execution
+                of the ability right then and there and start over with the next target.
+            Possible values of cmp are: <0, =0, ==0, >0, <=0, !0, !=0, >=0. If none are given, default to >0.
+        effect [damage | apply] [self | target]: An effect of this ability.
+            damage: Deal damage to a character. Does not roll dice, so use one of the roll commands in /help rpn2.
+            apply: Apply a modifier to a character. The RPN expression must return a modifier: see /help rpn3.
+                Defaults to apply if neither are given.
+            self: The effect applies to the user of the ability, regardless of tho the target may be.
+                    Usually superfluous, since you can target yourself.
+            target: The effect applies to the target.
+                Defaults to target if neither are given.
+        flavor: Set the ability's flavor text.
+        delete n: Delete step n from the ability.
+
+Type /help ability3 for an example.""",
+        'ability3': """A Shocking Example
+
+Say you've got a character named "Zeus", and you want him to be able to summon lightning. You could type the following commands in this order:
+
+/makeability zeus Smite 100 2 aoe 5
+/editability zeus smite flavor Call down a bolt of lightning from the sky that will damage everyone within 5 tiles with up to 3x strengh, tapering off the farther they are away from the center of the strike.
+/editability zeus smite dst = locus target pos dist
+/editability zeus smite power = self atk 5 dst - * 3 * 5 //
+/editability zeus smite effect damage power target def rolldmg
+
+Now, you can use
+/abilities Zeus
+to have BattleBot return all of the above information to you.
+If it's Zeus's turn to make a move,
+/ability smite 6N
+will use it on anyone and everyone within 11 tiles North of you.""",
         'rpn': """Reverse Polish Notation
 
 RPN is a way to write mathematical formulae and such. It will seem a bit strange to anyone used to the familiar infix notation, but is very easy for computers to understand.
@@ -1645,7 +1951,8 @@ BattleBot's RPN parser has a number of operations that it can perform. First, th
 - : Subtraction. Note that the second number popped is the number the other is subtracted *from*- so "5 1 -" means the same thing as "5 - 1" equals 4. Not -4.
         All the operators that take multiple arguments work this way. The first number pushed goes on the left hand side of the operator.
 * : Multiplies the two numbers. Simple.
-/ : Floor division. Divides, then rounds down (i.e. toward -infinity). "5 2 /" evaluates to 2.
+/ : Division. May return a floating-point number: "5 2 /" evaluates to 2.5.
+//: Floor division. Divides, then rounds down (i.e. toward -infinity). "5 2 //" evaluates to 2.
 
 The rest of these have English names, and are not case-sensitive.
 sum: Add together ALL the numbers on the stack, and push the result back on as the only element in the stack.
@@ -1654,7 +1961,7 @@ sum: Add together ALL the numbers on the stack, and push the result back on as t
 roll: Takes one argument off the stack. Roll that namy d10s, and push the sum back on the stack.
 rollh: Like roll, except hide the individual rolls. Just return the sum.
 rollu: As above, but hide the rolls if the user's stats are secret.
-rollt: As above, but look at the target's secret status.
+rollt: As above, but use the target's secret status.
 rollacc: Perform an accuracy check. Take two arguments and roll that many d10s.
 calcdmg: If the two arguments are 50 and 20, return how much damage would be dealt if I rolled a 50 and you rolled a 20.
 rolldmg: Roll the two arguments, then call calcdmg on the results.
@@ -1796,6 +2103,14 @@ def getReply(content, message):
             return modifiers(codex[1:], message.author)
         elif codex[0] == 'attack':
             return basicAttack(codex[1:], message.author)
+        elif codex[0] == 'ability':
+            return useAbility(codex[1:], message.author)
+        elif codex[0] == 'abilities':
+            return abilities(codex[1:], message.author)
+        elif codex[0] == 'makeability':
+            return createAbility(codex[1:], message.author)
+        elif codex[0] == 'editability':
+            return editAbility(codex[1:], message.author)
         elif codex[0] == 'pass':
             return passTurn(codex[1:], message.author)
         elif codex[0] == 'move':
@@ -1825,13 +2140,13 @@ def getReply(content, message):
 @client.event
 async def on_message(message):
     try:
-        reply = getReply(message.content, message)
+        reply = getReply(message.content, message)[:2000]
         if(len(reply) != 0):
             await client.send_message(message.channel, reply)
     except Exception as err:
         await client.send_message(message.channel, "`" + traceback.format_exc() + "`")
 
-CURRENT_DB_VERSION = 10
+CURRENT_DB_VERSION = 14
 
 def updateDBFormat():
     if 'version' not in database or database['version'] < CURRENT_DB_VERSION:
@@ -1881,14 +2196,17 @@ def updateDBFormat():
                         delattr(w, 'moved')
                     if hasattr(w, 'attacked'):
                         delattr(w, 'attacked')
-                    if hasattr(w, 'abilities'):
-                        delattr(w, 'abilities')
+                    if not hasattr(w, 'abilities'):
+                        w.abilities = {}
                     if not hasattr(w, 'modifiers'):
                         w.clearModifiers()
                     if hasattr(w, 'orphanModifiers'):
                         delattr(w, 'orphanModifiers')
                     if not hasattr(w, 'ownedModifiers'):
                         w.ownedModifiers = []
+                    if not hasattr(w, 'mention'):
+                        w.mention = w.username
+                        w.username = '_deprecated; please use /list to fix_'
         ##### This is where CHARACTER attributes get added! BATTLE attributes go above and an indent level to the left! Stop forgetting that, SE!
 
 
