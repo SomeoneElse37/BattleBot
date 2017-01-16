@@ -1835,7 +1835,12 @@ DEF: Defense. How well you are able to resist being hit.
 SPD: Speed. Determines order of initiative and how quickly you can move around the battlefield.""",
         'modifier': """Modifiers
 
-Battlebot supports modifiers to stats, of the multiplicative and additive varieties. The multiplicative ones apply first.
+Battlebot supports modifiers to stats, of the multiplicative and additive varieties.
+When computing a character's effective stats, BattleBot first looks at their base stats and stat points, as described in /help stats.
+Then, BattleBot goes through each multiplicative modifier for that stat, multiplies them together, and multiplies the number calculated above by that product.
+After that, BattleBot adds together all the additive modifiers for the stat, and adds the sum to the above product.
+Finally, after all that is done, BattleBot rounds the result down to an integer.
+
 Each modifier has the following data:
     Stat: Which stat the modifier, well, modifies.
     Strength: The amount by which the modifier modifies its associated stat.
