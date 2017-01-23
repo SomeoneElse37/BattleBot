@@ -2157,22 +2157,21 @@ def getReply(content, message):
             return get_invite(client.user.id)
         elif codex[0] == 'excel':
             data = createExcel(database[message.author.server.id].characters)
-            return str(data)
+            return data
     return ""
 
 @client.event
 async def on_message(message):
     try:
         reply = getReply(message.content, message)
-        if isinstance(reply, str):
-            if(len(reply) != 0):
-                await client.send_message(message.channel, reply[:2000])
-        else:
+        if not isinstance(reply, str):
             if not reply['error']:
                 await client.send_file(message.channel,reply['file'])
                 if reply['deleteAfterUpload']:
                     os.remove(reply['file'])
             reply = reply["message"]
+        if(len(reply) != 0):
+            await client.send_message(message.channel, reply)
     except Exception as err:
         await client.send_message(message.channel, "`" + traceback.format_exc() + "`")
 
