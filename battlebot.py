@@ -1533,7 +1533,7 @@ def editAbility(codex, author):
     isGM = author.server_permissions.administrator or author.server_permissions.manage_messages
     if author.id == char.userid or isGM:
         if char not in battle.participants or isGM:
-            abl = char.abilities[codex[1]]
+            abl = char.abilities[codex[1].lower()]
             abl.setStep(codex[2:])
             return str(abl)
         else:
