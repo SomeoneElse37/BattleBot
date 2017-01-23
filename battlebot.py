@@ -1069,8 +1069,8 @@ class Battle:
         self.id = guild.id      # Guild ID
         self.name = guild.name  # Guild Name
         self.size = (2048, 2048)
-        self.moved = false      # True if the current character has /moved during their turn
-        self.attacked = false   # True if the current character has /attacked or used an /ability during their turn
+        self.moved = False      # True if the current character has /moved during their turn
+        self.attacked = False   # True if the current character has /attacked or used an /ability during their turn
         self.orphanModifiers = []
 
     def addCharacter(self, char):
