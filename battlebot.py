@@ -16,6 +16,20 @@ from random import randint, gauss, shuffle
 from statistics import *
 from datetime import *
 
+generateExcel = True
+if generateExcel:
+    import odsify_characters
+    import os
+
+def createExcel(characterList):
+    if not generateExcel:
+        return {'error':True,'message':"This command is not enabled right now"}
+    else:
+        pathToExcel = odsify_characters.generateODSFromCharacters(characterList)
+        # with open(pathToExcel, 'rb') as f:
+        #    await client.send_file(channel, f)
+        return {'error':False,'file':pathToExcel,'message':"",'deleteAfterUpload':True}
+
 def d10(times, sides):
     dice_list = []
     for foo in range(0, times):
@@ -2022,7 +2036,8 @@ These commands/behaviors only function if you are a GM, meaning that you have ei
 /gmattack name acc atk [secret?]: Perform at attack with the given Accuracy and Attack against the named character.
     If 0 or a negative number is specified for acc or atk, those stats will not be rolled.
     If anything at all is given for the fourth parameter, the bot will not echo the Accuracy or Attack specified.
-    It's up to you to delete/edit your post to prevent players from reading the stats from it.""",
+    It's up to you to delete/edit your post to prevent players from reading the stats from it.
+/excel: Generate an ODF spreadsheet of... something. I'm not sure what.""",
         'calc': """Calculation Commands
 These just roll dice and calculate stuff. They have no effect on the battle at all.
 
@@ -2140,14 +2155,24 @@ def getReply(content, message):
             return git_link
         elif codex[0] == 'invite':
             return get_invite(client.user.id)
+        elif codex[0] == 'excel':
+            data = createExcel(database[message.author.server.id].characters)
+            return str(data)
     return ""
 
 @client.event
 async def on_message(message):
     try:
-        reply = getReply(message.content, message)[:2000]
-        if(len(reply) != 0):
-            await client.send_message(message.channel, reply)
+        reply = getReply(message.content, message)
+        if isinstance(reply, str):
+            if(len(reply) != 0):
+                await client.send_message(message.channel, reply[:2000])
+        else:
+            if not reply['error']:
+                await client.send_file(message.channel,reply['file'])
+                if reply['deleteAfterUpload']:
+                    os.remove(reply['file'])
+            reply = reply["message"]
     except Exception as err:
         await client.send_message(message.channel, "`" + traceback.format_exc() + "`")
 
