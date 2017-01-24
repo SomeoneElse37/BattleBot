@@ -18,8 +18,12 @@ from datetime import *
 
 generateExcel = True
 if generateExcel:
-    import odsify_characters
-    import os
+    try:
+        import odsify_characters
+        import os
+    except ImportError:
+        generateExcel=False
+        print("Could not load odfpy. /excel is turned off")
 
 def createExcel(characterList):
     if not generateExcel:
