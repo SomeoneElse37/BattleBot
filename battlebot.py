@@ -1762,7 +1762,7 @@ pos: The character's position.
 
 Next, the modifier operators. All take three arguments, of the form [factor, stat, duration]. They do not affect anything right away, but the returned object can be applied to a character later on in the ability.
 They are +mod, -mod, mod%, +mod%, and -mod%. The syntax parallels that of /addModifier, described in /help gm. So I'll just give some examples in the RPN format here:
-    10 STR 3 +mod == +10 Strength for 3 turns
+    10 ATK 3 +mod == +10 Strength for 3 turns
     5 EVA 2 -mod == -5 Evasion for 2 turns
     150 SPD 0 mod% == 150% Speed until end of turn
     20 DEF 1 +mod% == +20% (== 120%) Defense for 1 turn
@@ -1783,7 +1783,7 @@ These commands/behaviors only function if you are a GM, meaning that you have ei
         Minus sign means "decrease this stat by the specified percentage"
         No sign means "set this stat to this percentage of what is was before"
     So 120% and +20% mean the same thing, as do 80% and -20%.
-    Acceptable stats are HP, ACC, EVA, STR, DEF, and SPD. All are case-insensitive.
+    Acceptable stats are HP, ACC, EVA, ATK, DEF, and SPD. All are case-insensitive.
 /warp name x y: Teleports the named character to the given coordinates.
 /sethp name [health]: Sets the named character's current health, or to their maximum health is none is specified.
 /togglesecret name: Toggle whether the named character's stats are hidden from players.
