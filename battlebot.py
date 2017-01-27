@@ -16,10 +16,10 @@ from random import randint, gauss, shuffle
 from statistics import *
 from datetime import *
 #Load the custom classes
-from characters import *
-from battles import *
-from modifiers import *
-from abilities import *
+from classes.characters import Character,makeStatDict,defaultStats,statString
+from classes.battles import Battle,clampPosWithinField
+from classes.modifiers import Modifier
+from classes.abilities import Ability
 #other custom stuff that needs to get imported
 from help_pages import help_dict
 generateExcel = True
