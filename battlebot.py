@@ -21,11 +21,16 @@ from classes.battles import Battle,clampPosWithinField
 from classes.modifiers import Modifier
 from classes.abilities import Ability
 #other custom stuff that needs to get imported
-from help_pages import help_dict
+from modules.help_pages import help_dict
+from database.loadDatabase import makeDB
+results = makeDB(argv)
+token = results["token"]
+db=results["db"]
+results=None #we don't need it anymore. Though it isn't like we clear a lot of RAM with it, its better then nothing
 generateExcel = True
 if generateExcel:
     try:
-        import odsify_characters
+        import modules.odsify_characters
         import os
     except ImportError:
         generateExcel=False
@@ -35,7 +40,7 @@ def createExcel(characterList):
     if not generateExcel:
         return {'error':True,'message':"This command is not enabled right now"}
     else:
-        pathToExcel = odsify_characters.generateODSFromCharacters(characterList)
+        pathToExcel = modules.odsify_characters.generateODSFromCharacters(characterList)
         # with open(pathToExcel, 'rb') as f:
         #    await client.send_file(channel, f)
         return {'error':False,'file':pathToExcel,'message':"",'deleteAfterUpload':True}
@@ -573,19 +578,11 @@ comparisons = {
         '<=0': lambda n: n <= 0,
         '!=0': lambda n: n != 0,
         '>=0': lambda n: n >= 0}
-
-# All of the Battles known to Battlebot, with all their data, keyed by guild ID.
-database = {}
-
-def guildExists(guild):
-    return guild.id in database
-
 def createGuild(guild):
-    if guildExists(guild):
-        raise ValueError(guild.name + 'is already known to Battlebot!')
-    else:
-        database[guild.id] = Battle(guild)
-
+        if db.guildExists(guild):
+            raise ValueError(guild.name + 'is already known to Battlebot!')
+        else:
+            db.makeBattle(guild.id,Battle(guild))
 def stats(codex):
     out = '`{:11s}  {:>5s} {:>5s} {:>5s} {:>5s} {:>5s} {:>5s}`\n'.format('Size Tier', 'HP', 'Acc', 'Eva', 'Atk', 'Def', 'Spd')
     ss = defaultStats(1);
@@ -598,30 +595,26 @@ def stats(codex):
 
 def makeChar(codex, author):
     char = Character(author, codex[0], codex[1].lower(), makeStatsFromCodex(codex[2:]))
-    if not guildExists(author.server):
-        createGuild(author.server)
-    database[author.server.id].addCharacter(char)
+    db.insertChar(author.server,char)
     return str(char) + '\n\n{:d} stat points used.'.format(sum(char.statPoints.values()))
 
 def clearBattle(codex, author):
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
-        database[author.server.id].clear()
+        db.clearBattle(author.server.id)
         return 'Battle data cleared.'
     else:
         return "You need Manage Messages or Administrator permission to clear the battle state!"
 
 def joinBattle(codex, author):
-    battle = database[author.server.id]
-    battle.addParticipant(codex[0])
-    return codex[0] + ' has successfully joined the battle!'
+    return db.addParticipant(codex[0],author.server.id)
+    
 
 def battleStatus(codex, author):
-    battle = database[author.server.id]
+    battle = db.getBattle(author)
     return str(battle)
 
 def charData(codex, author):
-    battle = database[author.server.id]
-    char = battle.characters[codex[0].lower()]
+    char = db.getCharacter(author,codex)
     if char.userid == author.id:
         char.username = author.display_name
     return str(char)
@@ -633,19 +626,19 @@ def info(codex, author):
         return charData(codex, author)
 
 def modifiers(codex, author):
-    battle = database[author.server.id]
-    char = battle.characters[codex[0].lower()]
-    mods = char.listModifiers()
+    mods = db.getModifiers(author.server.id,codex[0].lower())
+    #battle = database[author.server.id]
+    #char = battle.characters[]
+    #mods = char.listModifiers()
     if len(mods) > 0:
         return mods
     else:
         return char.name + ' has no modifiers.'
 
 def deleteChar(codex, author):
-    battle = database[author.server.id]
-    char = battle.characters[codex[0].lower()]
+    char = db.getCharacter(author.server.id,codex[0].lower())
     if author.id == char.userid or author.server_permissions.administrator or author.server_permissions.manage_messages:
-        battle.delete(codex[0])
+        db.deleteChar(author.server.id,codex[0])
         return codex[0] + ' was successfully deleted.'
     else:
         return "You need Manage Messages or Administrator permission to delete other players' characters!"
@@ -999,99 +992,18 @@ async def on_message(message):
             await client.send_message(message.channel, reply)
     except Exception as err:
         await client.send_message(message.channel, "`" + traceback.format_exc() + "`")
-
-CURRENT_DB_VERSION = 14
-
-def updateDBFormat():
-    if 'version' not in database or database['version'] < CURRENT_DB_VERSION:
-        print("Updating database format.")
-        database['version'] = CURRENT_DB_VERSION
-        for k, v in database.items():
-            if k != 'version':
-                # Battle attributes: characters, participants, turn, id, name, radius
-                if not hasattr(v, 'size'):
-                    v.size = (1024, 1024)
-                    delattr(v, 'radius')
-                if not hasattr(v, 'moved'):
-                    v.moved = False
-                if not hasattr(v, 'attacked'):
-                    v.attacked = False
-                if not hasattr(v, 'orphanModifiers'):
-                    v.orphanModifiers = []
-                for l, w in v.characters.items():
-                    # Character attributes: username, userid, name, race, size, statPoints, baseStats, abilities, modifiers, health, location, secret
-                    if not hasattr(w, 'statPoints'):
-                        w.baseStats = baseStats[w.race]
-                        w.statPoints = {}
-                        if hasattr(w, 'stats'):
-                            for n, s in w.stats.items():
-                                # stat = base + base/8 * points
-                                # stat - base = base/8 * points
-                                # 8(stat - base) = base * points
-                                # 8(stat - base) / base = points
-                                # points = 8(stat - base) / base
-                                # points = 8 * (stat - base)/base
-                                # points = 8 * (stat/base - base/base)
-                                # points = 8 * (stat/base - 1)
-                                w.statPoints[n] = int(8 * (w.stats[n]/w.baseStats[n] - 1))
-                        delattr(w, 'stats')
-                    if not hasattr(w, 'abilities'):
-                        w.abilities = []
-                    if not hasattr(w, 'modifiers'):
-                        w.modifiers = []
-                    if not hasattr(w, 'location'):
-                        w.location = 0
-                    if not hasattr(w, 'secret'):
-                        w.secret = False
-                    if not hasattr(w, 'pos'):
-                        w.pos = (0, 0)
-                        delattr(w, 'location')
-                    if hasattr(w, 'moved'):
-                        delattr(w, 'moved')
-                    if hasattr(w, 'attacked'):
-                        delattr(w, 'attacked')
-                    if not hasattr(w, 'abilities'):
-                        w.abilities = {}
-                    if not hasattr(w, 'modifiers'):
-                        w.clearModifiers()
-                    if hasattr(w, 'orphanModifiers'):
-                        delattr(w, 'orphanModifiers')
-                    if not hasattr(w, 'ownedModifiers'):
-                        w.ownedModifiers = []
-                    if not hasattr(w, 'mention'):
-                        w.mention = w.username
-                        w.username = '_deprecated; please use /list to fix_'
         ##### This is where CHARACTER attributes get added! BATTLE attributes go above and an indent level to the left! Stop forgetting that, SE!
 
 
-token = ''
 
-datafile = 'battlebot.pickle'
-dev_datafile = 'battlebot_dev.pickle'
 
-if len(argv) > 1 and argv[1] == 'dev':
-    print('Battlebot running in dev mode.')
-    with open('devbot.token', mode='r') as f:
-        token = f.readline().strip()
-    datafile = dev_datafile
-else:
-    print('Battlebot running in release mode.')
-    with open('bot.token', mode='r') as f:
-        token = f.readline().strip()
 
-try:
-    with open(datafile, 'rb') as f:
-        database = pickle.load(f)
-    updateDBFormat()
-    print(str(len(database) - 1) + ' guilds loaded.')
-except FileNotFoundError:
-    print('Database could not be loaded. Creating an empty database.')
+
+
 
 try:
     client.run(token)  # Blocking call; execution will not continue until client.run() returns
 finally:
-    with open(datafile, 'wb') as f:
-        pickle.dump(database, f, pickle.HIGHEST_PROTOCOL)
-    print('Database saved to disk.')
+    db.exit()
 
 #client.connect()
