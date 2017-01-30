@@ -15,19 +15,23 @@ from random import randint, gauss, shuffle
 
 from statistics import *
 from datetime import *
+
 #Load the custom classes
 from classes.characters import Character,makeStatDict,defaultStats,statString
 from classes.battles import Battle,clampPosWithinField
 from classes.modifiers import Modifier
 from classes.abilities import Ability
+
 #other custom stuff that needs to get imported
 from modules.help_pages import help_dict
 from database.loadDatabase import makeDB
+
 results = makeDB(argv)
 token = results["token"]
-db=results["db"]
-results=None #we don't need it anymore. Though it isn't like we clear a lot of RAM with it, its better then nothing
+db = results["db"]
+results = None #we don't need it anymore. Though it isn't like we clear a lot of RAM with it, its better then nothing
 generateExcel = True
+
 if generateExcel:
     try:
         import modules.odsify_characters
@@ -992,14 +996,6 @@ async def on_message(message):
             await client.send_message(message.channel, reply)
     except Exception as err:
         await client.send_message(message.channel, "`" + traceback.format_exc() + "`")
-        ##### This is where CHARACTER attributes get added! BATTLE attributes go above and an indent level to the left! Stop forgetting that, SE!
-
-
-
-
-
-
-
 
 try:
     client.run(token)  # Blocking call; execution will not continue until client.run() returns

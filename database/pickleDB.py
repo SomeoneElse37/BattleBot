@@ -1,4 +1,4 @@
-_CURRENT_DB_VERSION = 14
+_CURRENT_DB_VERSION = 15
 
 #This file contains everything to interact with the pickle version of the database
 def _updateDBFormat(database):
@@ -8,58 +8,17 @@ def _updateDBFormat(database):
         for k, v in database.items():
             if k != 'version':
                 # Battle attributes: characters, participants, turn, id, name, radius
-                if not hasattr(v, 'size'):
-                    v.size = (1024, 1024)
-                    delattr(v, 'radius')
-                if not hasattr(v, 'moved'):
-                    v.moved = False
-                if not hasattr(v, 'attacked'):
-                    v.attacked = False
-                if not hasattr(v, 'orphanModifiers'):
-                    v.orphanModifiers = []
+                # Ex:
+                # if not hasattr(v, 'moved'):
+                #     v.moved = False
+
                 for l, w in v.characters.items():
                     # Character attributes: username, userid, name, race, size, statPoints, baseStats, abilities, modifiers, health, location, secret
-                    if not hasattr(w, 'statPoints'):
-                        w.baseStats = baseStats[w.race]
-                        w.statPoints = {}
-                        if hasattr(w, 'stats'):
-                            for n, s in w.stats.items():
-                                # stat = base + base/8 * points
-                                # stat - base = base/8 * points
-                                # 8(stat - base) = base * points
-                                # 8(stat - base) / base = points
-                                # points = 8(stat - base) / base
-                                # points = 8 * (stat - base)/base
-                                # points = 8 * (stat/base - base/base)
-                                # points = 8 * (stat/base - 1)
-                                w.statPoints[n] = int(8 * (w.stats[n]/w.baseStats[n] - 1))
-                        delattr(w, 'stats')
-                    if not hasattr(w, 'abilities'):
-                        w.abilities = []
-                    if not hasattr(w, 'modifiers'):
-                        w.modifiers = []
-                    if not hasattr(w, 'location'):
-                        w.location = 0
-                    if not hasattr(w, 'secret'):
-                        w.secret = False
-                    if not hasattr(w, 'pos'):
-                        w.pos = (0, 0)
-                        delattr(w, 'location')
-                    if hasattr(w, 'moved'):
-                        delattr(w, 'moved')
-                    if hasattr(w, 'attacked'):
-                        delattr(w, 'attacked')
-                    if not hasattr(w, 'abilities'):
-                        w.abilities = {}
-                    if not hasattr(w, 'modifiers'):
-                        w.clearModifiers()
-                    if hasattr(w, 'orphanModifiers'):
-                        delattr(w, 'orphanModifiers')
-                    if not hasattr(w, 'ownedModifiers'):
-                        w.ownedModifiers = []
-                    if not hasattr(w, 'mention'):
-                        w.mention = w.username
-                        w.username = '_deprecated; please use /list to fix_'
+                    # Ex:
+                    # if not hasattr(w, 'abilities'):
+                    #     w.abilities = []
+
+                    ##### This is where CHARACTER attributes get added! BATTLE attributes go above and an indent level to the left! Stop forgetting that, SE!
 
 
 class Database:
@@ -74,7 +33,7 @@ class Database:
         except FileNotFoundError:
             print('Database could not be loaded. Creating an empty database.')
             self.db={}
-    
+
     def exitDB(self):
         with open(self.fileName, 'wb') as f:
             self.pickle.dump(database, f, self.pickle.HIGHEST_PROTOCOL)
@@ -99,7 +58,7 @@ class Database:
 
     def makeBattle(self,guild,battle)
          self.db[guild.id] = battle
-    
+
     def clearBattle(self,battleId):
         self.db[author.server.id].clear()
     def addParticipant(self,user):
