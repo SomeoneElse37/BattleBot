@@ -39,32 +39,88 @@ class Database:
             self.pickle.dump(database, f, self.pickle.HIGHEST_PROTOCOL)
         print('Database saved to disk.')
 
-    def getBattle(self,author):
-        return self.db[author.server.id]
+    def getBattle(self,serverId):
+        return self.db[serverId]
 
-    def getCharacter(self,author,charName):
-        battle =self.getBattle(author)
+    def getCharacter(self,serverId,charName):
+        battle =self.getBattle(serverId)
         return battle[charName.lower()]
 
     def insertCharacter(self,server,char):
-        if not self.guildExists(author.server):
-            self.createGuild(server)
+        if not self.db.guildExists(author.server):
+            self.db.createGuild(server)
         self.db[server.id].addCharacter(char)
-    def deleteChar(self,authorId,charName):
-        battle= self.getBattle(authorId)
+    def updateStats(self,serverId,charName,stats,overwriteBattleLock=False):
+        battle = self.getBattle(serverId)
+        char = self.getCharacter(charName)
+        if char not in battle.participants or isGM:
+            char.statPoints = stats
+            return str(char) + '\n\n{:d} stat points used.'.format(sum(char.statPoints.values()))
+        return False
+    def insertAbility(self,serverId,codex,overwriteBattleLock=False):
+        battle = self.getBattle(serverId)
+        char  = self.getCharacter(codex[0].lower())
+        if char not in battle.participants or overwriteBattleLock:
+            try:
+                abl = char.abilities[codex[1].lower()]
+                abl.setFields(codex[2:])
+                return str(abl)
+            except: KeyError:
+                abl = Ability(codex[1:])
+                char.abilities[abl.name.lower()] = abl
+                return str(abl)
+        return False
+    def updateAbility(self,serverId,codex,overwriteBattleLock=False):
+        char = self.getCharacter(codex[0].lower())
+        battle = self.getBattle(serverId)
+        if char not in battle.participants or overwriteBattleLock:
+            abl = char.abilities[codex[1].lower()]
+            abl.setStep(codex[2:])
+            return str(abl)
+        return False
+    def getAbilities(self,serverId,charName):
+        char = self.getCharacter(serverId,charName)
+        return char.listAbilities()
+    def deleteChar(self,battleId,charName):
+        battle= self.getBattle(battleId)
         battle.deleteChar(charName)
+        
     def guildExists(self,guild):
         return guild.id in self.db
-
+        
+    def getCurrentChar(self,serverId):
+        battle = self.getBattle(serverId)
+        return battle.currentChar()
+    
     def makeBattle(self,guild,battle)
          self.db[guild.id] = battle
-
+         
+    def doPassTurn(self,serverId):
+        battle = self.getBattle(serverId)
+        battle.passTurn()
+        return battle.getCurrentCharPretty()
+    
+    def doBasicAttack(self,target,serverId):
+        battle= self.getBattle(serverId)
+        return battle.basicAttack(target) + '\n\n' + battle.currentCharPretty()
+        
+    def doMove(self,codex,serverId):
+        battle = self.getBattle(serverId)
+        return battle.move(codex) + '\n\n' + battle.currentCharPretty()
+        
+    def doAbility(self,codex,serverId):
+        battle = self.getBattle(serverId)
+        return battle.useAbility(codex) + '\n\n' + battle.currentCharPretty()
+        
     def clearBattle(self,battleId):
-        self.db[author.server.id].clear()
+        battle = self.getBattle(battleId)
+        battle.clear()
+    
     def addParticipant(self,user):
-        battle = self.getBattle(user)
+        battle = self.getBattle(user.server.id)
         battle.addParticipant(user)
         return user + ' has successfully joined the battle!'
+        
     def getModifiers(self,serverId,charName):
         char = self.getCharacter(serverId,charName)
         return char.listModifiers()

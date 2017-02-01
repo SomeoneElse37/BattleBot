@@ -648,76 +648,82 @@ def deleteChar(codex, author):
         return "You need Manage Messages or Administrator permission to delete other players' characters!"
 
 def passTurn(codex, author):
-    battle = database[author.server.id]
-    char = battle.currentChar()
+    char = self.currentChar(author.server.id)
     if author.id == char.userid or author.server_permissions.administrator or author.server_permissions.manage_messages:
-        battle.passTurn()
-        return 'Turn passed successfully.\n\n' + battle.currentCharPretty()
+        return 'Turn passed successfully.\n\n' + db.doPassTurn(author.server.id)
     else:
         return "You need Manage Messages or Administrator permission to take control of other players' characters!"
 
 def basicAttack(codex, author):
-    battle = database[author.server.id]
-    char = battle.currentChar()
+    char = db.getCurrentChar(author.server.id)
     if author.id == char.userid or author.server_permissions.administrator or author.server_permissions.manage_messages:
-        return battle.basicAttack(codex[0]) + '\n\n' + battle.currentCharPretty()
+        return db.doBasicAttack(codex[0],author.server.id) #battle.basicAttack(codex[0]) + '\n\n' + battle.currentCharPretty()
     else:
         return "You need Manage Messages or Administrator permission to take control of other players' characters!"
 
 def move(codex, author):
-    battle = database[author.server.id]
-    char = battle.currentChar()
+    char = db.getCurrentChar(author.server.id)#battle.currentChar()
     if author.id == char.userid or author.server_permissions.administrator or author.server_permissions.manage_messages:
-        return battle.move(codex) + '\n\n' + battle.currentCharPretty()
+        return db.doMove(codex,author.server.id)#battle.move(codex) + '\n\n' + battle.currentCharPretty()
     else:
         return "You need Manage Messages or Administrator permission to take control of other players' characters!"
 
 # Use an ability.
 def useAbility(codex, author):
-    battle = database[author.server.id]
-    char = battle.currentChar()
+    #battle = database[author.server.id]
+    char = db.getCurrentChar(author.server.id)
     if author.id == char.userid or author.server_permissions.administrator or author.server_permissions.manage_messages:
-        return battle.useAbility(codex) + '\n\n' + battle.currentCharPretty()
+        return db.useAbility(codex,author.server.id)#battle.useAbility(codex) + '\n\n' + battle.currentCharPretty()
     else:
         return "You need Manage Messages or Administrator permission to take control of other players' characters!"
 
 def createAbility(codex, author):
-    battle = database[author.server.id]
-    char = battle.characters[codex[0].lower()]
+    char = db.getCharacter(codex[0].lower())
+    #battle = database[author.server.id]
+    #char = battle.characters[codex[0].lower()]
     isGM = author.server_permissions.administrator or author.server_permissions.manage_messages
     if author.id == char.userid or isGM:
-        if char not in battle.participants or isGM:
-            try:
-                abl = char.abilities[codex[1].lower()]
-                abl.setFields(codex[2:])
-                return str(abl)
-            except KeyError:
-                abl = Ability(codex[1:])
-                char.abilities[abl.name.lower()] = abl
-                return str(abl)
-        else:
-            return "You need Manage Messages or Administrator permission to modify characters during a battle!"
+        result = db.insertAbility(codex,autor.server.id,isGM)
+        if result:
+            return result
+        return "You need Manage Messages or Administrator permission to modify characters during a battle!"
+#        if char not in battle.participants or isGM:
+#            try:
+#                abl = char.abilities[codex[1].lower()]
+#                abl.setFields(codex[2:])
+#                return str(abl)
+#            except KeyError:
+#                abl = Ability(codex[1:])
+#                char.abilities[abl.name.lower()] = abl
+#                return str(abl)
+#        else:
+#            return "You need Manage Messages or Administrator permission to modify characters during a battle!"
     else:
         return "You need Manage Messages or Administrator permission to modify other players' characters!"
 
 def editAbility(codex, author):
-    battle = database[author.server.id]
-    char = battle.characters[codex[0].lower()]
+    #battle = database[author.server.id]
+    #char = battle.characters[codex[0].lower()]
+    char = db.getCharacter(codex[0].lower())
     isGM = author.server_permissions.administrator or author.server_permissions.manage_messages
     if author.id == char.userid or isGM:
-        if char not in battle.participants or isGM:
-            abl = char.abilities[codex[1].lower()]
-            abl.setStep(codex[2:])
-            return str(abl)
-        else:
-            return "You need Manage Messages or Administrator permission to modify characters during a battle!"
+        result = db.updateAbility(author.server.id,codex,isGM)
+        if result:
+            return result
+        return "You need Manage Messages or Administrator permission to modify characters during a battle!"
+#        if char not in battle.participants or isGM:
+#            abl = char.abilities[codex[1].lower()]
+#            abl.setStep(codex[2:])
+#            return str(abl)
+#        else:
+#            return "You need Manage Messages or Administrator permission to modify characters during a battle!"
     else:
         return "You need Manage Messages or Administrator permission to modify other players' characters!"
 
 def abilities(codex, author):
-    battle = database[author.server.id]
-    char = battle.characters[codex[0].lower()]
-    return char.listAbilities()
+    #battle = database[author.server.id]
+    #char = battle.characters[codex[0].lower()]
+    return db.getAbilities(author.server.id,codex[0].lower())# char.listAbilities()
 
 # /map
 # /map scale
@@ -726,7 +732,7 @@ def abilities(codex, author):
 # /map x1 x2 y1 y2
 # /map x1 x2 y1 y2 scale
 def showMap(codex, author):
-    battle = database[author.server.id]
+    battle = db.getBattle(author.server.id)#database[author.server.id]
     out = ''
     if len(codex) == 0:
         size = max(battle.size)
@@ -759,15 +765,20 @@ def showMap(codex, author):
         return out
 
 def restat(codex, author):
-    battle = database[author.server.id]
-    char = battle.characters[codex[0].lower()]
+    char = db.getCharacter(author.server.id,codex[0].lower())
+    #battle = database[author.server.id]
+    #char = battle.characters[codex[0].lower()]
     isGM = author.server_permissions.administrator or author.server_permissions.manage_messages
     if author.id == char.userid or isGM:
-        if char not in battle.participants or isGM:
-            char.statPoints = makeStatsFromCodex(codex[1:])
-            return str(char) + '\n\n{:d} stat points used.'.format(sum(char.statPoints.values()))
-        else:
-            return "You need Manage Messages or Administrator permission to restat your characters during a battle!"
+        result = db.updateStats(author.server.id,codex[0].lower(),makeStatsFromCodex[codex[1:]],isGM)
+        if result:
+            return result
+        return "You need Manage Messages or Administrator permission to restat your characters during a battle!"
+#        if char not in battle.participants or isGM:
+#            char.statPoints = makeStatsFromCodex(codex[1:])
+#            return str(char) + '\n\n{:d} stat points used.'.format(sum(char.statPoints.values()))
+#        else:
+#            return "You need Manage Messages or Administrator permission to restat your characters during a battle!"
     else:
         return "You need Manage Messages or Administrator permission to restat other players' characters!"
 
