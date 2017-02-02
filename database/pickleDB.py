@@ -1,27 +1,28 @@
 _CURRENT_DB_VERSION = 15
-
+from classes.battles  import Battle
 #This file contains everything to interact with the pickle version of the database
 def _updateDBFormat(database):
     if 'version' not in database or database['version'] < _CURRENT_DB_VERSION:
         print("Updating database format.")
-        database['version'] = CURRENT_DB_VERSION
-        for k, v in database.items():
-            if k != 'version':
-                # Battle attributes: characters, participants, turn, id, name, radius
-                # Ex:
-                # if not hasattr(v, 'moved'):
-                #     v.moved = False
+        database['version'] = _CURRENT_DB_VERSION
+#        for k, v in database.items():
+#            if k != 'version':
+#                # Battle attributes: characters, participants, turn, id, name, radius
+#                # Ex:
+#                # if not hasattr(v, 'moved'):
+#                #     v.moved = False
 
-                for l, w in v.characters.items():
-                    # Character attributes: username, userid, name, race, size, statPoints, baseStats, abilities, modifiers, health, location, secret
-                    # Ex:
-                    # if not hasattr(w, 'abilities'):
-                    #     w.abilities = []
+#                for l, w in v.characters.items():
+#                    # Character attributes: username, userid, name, race, size, statPoints, baseStats, abilities, modifiers, health, location, secret
+#                    # Ex:
+#                    # if not hasattr(w, 'abilities'):
+#                    #     w.abilities = []
 
-                    ##### This is where CHARACTER attributes get added! BATTLE attributes go above and an indent level to the left! Stop forgetting that, SE!
+#                    ##### This is where CHARACTER attributes get added! BATTLE attributes go above and an indent level to the left! Stop forgetting that, SE!
 
 
 class Database:
+    
     def __init__(self,fileName,pickle):
         self.fileName=fileName
         self.pickle=pickle
@@ -36,18 +37,26 @@ class Database:
 
     def exitDB(self):
         with open(self.fileName, 'wb') as f:
-            self.pickle.dump(database, f, self.pickle.HIGHEST_PROTOCOL)
+            self.pickle.dump(self.db, f, self.pickle.HIGHEST_PROTOCOL)
         print('Database saved to disk.')
 
     def getBattle(self,serverId):
         return self.db[serverId]
-
+    def createGuild(self,guild):
+        if self.guildExists(guild):
+            raise ValueError(guild.name + 'is already known to Battlebot!')
+        else:
+            self.db[guild.id]=Battle(guild)#makeBattle(guild.id,Battle(guild))
+    def guildExists(self,guild):
+        return guild in self.db
+    def getAllCharacters(self,serverId):
+        return self.db[serverId].characters
     def getCharacter(self,serverId,charName):
         battle =self.getBattle(serverId)
         return battle[charName.lower()]
     def insertCharacter(self,server,char):
-        if not self.db.guildExists(author.server):
-            self.db.createGuild(server)
+        if not self.guildExists(server):
+            self.createGuild(server)
         self.db[server.id].addCharacter(char)
         
     def toggleSecretChar(self,serverId,charName):
@@ -82,7 +91,7 @@ class Database:
                 abl = char.abilities[codex[1].lower()]
                 abl.setFields(codex[2:])
                 return str(abl)
-            except: KeyError:
+            except KeyError:
                 abl = Ability(codex[1:])
                 char.abilities[abl.name.lower()] = abl
                 return str(abl)
@@ -109,7 +118,7 @@ class Database:
         battle = self.getBattle(serverId)
         return battle.currentChar()
     
-    def makeBattle(self,guild,battle)
+    def makeBattle(self,guild,battle):
          self.db[guild.id] = battle
          
     def doPassTurn(self,serverId):

@@ -582,11 +582,7 @@ comparisons = {
         '<=0': lambda n: n <= 0,
         '!=0': lambda n: n != 0,
         '>=0': lambda n: n >= 0}
-def createGuild(guild):
-        if db.guildExists(guild):
-            raise ValueError(guild.name + 'is already known to Battlebot!')
-        else:
-            db.makeBattle(guild.id,Battle(guild))
+
 def stats(codex):
     out = '`{:11s}  {:>5s} {:>5s} {:>5s} {:>5s} {:>5s} {:>5s}`\n'.format('Size Tier', 'HP', 'Acc', 'Eva', 'Atk', 'Def', 'Spd')
     ss = defaultStats(1);
@@ -599,7 +595,7 @@ def stats(codex):
 
 def makeChar(codex, author):
     char = Character(author, codex[0], codex[1].lower(), makeStatsFromCodex(codex[2:]))
-    db.insertChar(author.server,char)
+    db.insertCharacter(author.server,char)
     return str(char) + '\n\n{:d} stat points used.'.format(sum(char.statPoints.values()))
 
 def clearBattle(codex, author):
@@ -825,7 +821,7 @@ def addModifier(codex, author):
 
 def warp(codex, author):
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
-       return db.updateLocation(autor.server.id,codex[0].lower(),int(codex[1]), int(codex[2])
+        return db.updateLocation(autor.server.id,codex[0].lower(),int(codex[1]), int(codex[2]))
         #return str(char)
     else:
         return "You need Manage Messages or Administrator permission to teleport characters!"
@@ -855,8 +851,9 @@ def toggleSecret(codex, author):
         return "You need Manage Messages or Administrator permission to change characters' visibility!"
 
 def gm_attack(codex, author):
-    battle = database[author.server.id]
-    char = battle.characters[codex[0].lower()]
+    #battle = database[author.server.id]
+    #char = battle.characters[codex[0].lower()]
+    char =  db.getCharacter(author.server.id,codex[0].lower())
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
         acc = int(codex[1])
         atk = int(codex[2])
@@ -990,7 +987,7 @@ def getReply(content, message):
         elif codex[0] == 'invite':
             return get_invite(client.user.id)
         elif codex[0] == 'excel':
-            data = createExcel(database[message.author.server.id].characters)
+            data = createExcel(db.getAllCharacters(message.author.server.id))
             return data
     return ""
 
@@ -1012,6 +1009,6 @@ async def on_message(message):
 try:
     client.run(token)  # Blocking call; execution will not continue until client.run() returns
 finally:
-    db.exit()
+    db.exitDB()
 
 #client.connect()
