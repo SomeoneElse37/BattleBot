@@ -45,11 +45,16 @@ class Database:
     def getCharacter(self,serverId,charName):
         battle =self.getBattle(serverId)
         return battle[charName.lower()]
-
     def insertCharacter(self,server,char):
         if not self.db.guildExists(author.server):
             self.db.createGuild(server)
         self.db[server.id].addCharacter(char)
+        
+    def toggleSecretChar(self,serverId,charName):
+        char = self.getCharacter(serverId,charName)
+        char.toggleSecret()
+        return char
+    
     def updateStats(self,serverId,charName,stats,overwriteBattleLock=False):
         battle = self.getBattle(serverId)
         char = self.getCharacter(charName)
@@ -57,6 +62,18 @@ class Database:
             char.statPoints = stats
             return str(char) + '\n\n{:d} stat points used.'.format(sum(char.statPoints.values()))
         return False
+    def updateHealth(self,serverId,charName,newHealth):
+        char = self.getCharacter(serverId,charName)
+        char.health = newHealth
+        return char
+    def respawnChar(self,serverId,charName):
+        char = self.getCharacter(serverId,charName)
+        char.respawn()
+        return char
+    def updateLocation(self,serverId,charName,newX,newY):
+        char = self.getCharacter(serverId,charName)
+        char.pos = int(newX),int(newY)
+        return str(char)
     def insertAbility(self,serverId,codex,overwriteBattleLock=False):
         battle = self.getBattle(serverId)
         char  = self.getCharacter(codex[0].lower())

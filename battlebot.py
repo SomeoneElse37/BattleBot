@@ -807,13 +807,13 @@ def parseModifier(codex):
         isMult = False
         factor = int(factor)
     return (stat, factor, dur, isMult)
-
+#This needs to be better abstracted if we want to switch to SQL.
 def addModifier(codex, author):
-    battle = database[author.server.id]
-    char = battle.characters[codex[0].lower()]
+    battle = db.getBattle(author.server.id)#database[author.server.id]
+    char = db.getCharacter(author.server.id,codex[0].lower())#battle.characters[codex[0].lower()]
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
         try:
-            owner = battle.characters[codex[-1].lower()]
+            owner = db.getCharacter(codex[-1].lower())#battle.characters[codex[-1].lower()]
         except KeyError:
             owner = None
         mod = Modifier(parseModifier(codex[1:]), holder=char, owner=owner) # Will automatically attach itself to the correct characters
@@ -824,31 +824,32 @@ def addModifier(codex, author):
         return "You need Manage Messages or Administrator permission to create modifiers!"
 
 def warp(codex, author):
-    battle = database[author.server.id]
-    char = battle.characters[codex[0].lower()]
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
-        char.pos = int(codex[1]), int(codex[2])
-        return str(char)
+       return db.updateLocation(autor.server.id,codex[0].lower(),int(codex[1]), int(codex[2])
+        #return str(char)
     else:
         return "You need Manage Messages or Administrator permission to teleport characters!"
 
 def setHealth(codex, author):
-    battle = database[author.server.id]
-    char = battle.characters[codex[0].lower()]
+    #battle = database[author.server.id]
+    #char = battle.characters[codex[0].lower()]
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
         if len(codex) > 1:
-            char.health = int(codex[1])
+            char = db.updateHealth(author.server.id,codex[0].lower(),codex[1])
+            #char.health = int(codex[1])
         else:
-            char.respawn()
+            char = db.respawnChar(author.server.id,codex[0].lower())
+            #char.respawn()
         return str(char)
     else:
         return "You need Manage Messages or Administrator permission to set characters' HP!"
 
 def toggleSecret(codex, author):
-    battle = database[author.server.id]
-    char = battle.characters[codex[0].lower()]
+    #battle = database[author.server.id]
+    #char = battle.characters[codex[0].lower()]
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
-        char.secret = not char.secret
+        char= db.toggleSecretChar(author.server.id,codex[0].lower())
+        #char.secret = not char.secret
         return str(char)
     else:
         return "You need Manage Messages or Administrator permission to change characters' visibility!"
