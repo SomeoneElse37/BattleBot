@@ -41,6 +41,7 @@ class Database:
         print('Database saved to disk.')
 
     def getBattle(self,serverId):
+        print(type(self.db))
         return self.db[serverId]
     def createGuild(self,guild):
         if self.guildExists(guild):

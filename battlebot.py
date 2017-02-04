@@ -610,11 +610,11 @@ def joinBattle(codex, author):
     
 
 def battleStatus(codex, author):
-    battle = db.getBattle(author)
+    battle = db.getBattle(author.server.id)
     return str(battle)
 
 def charData(codex, author):
-    char = db.getCharacter(author,codex)
+    char = db.getCharacter(author.server.id,codex[1])
     if char.userid == author.id:
         char.username = author.display_name
     return str(char)
