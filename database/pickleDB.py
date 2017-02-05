@@ -143,10 +143,10 @@ class Database:
         battle = self.getBattle(battleId)
         battle.clear()
     
-    def addParticipant(self,user):
-        battle = self.getBattle(user.server.id)
-        battle.addParticipant(user)
-        return user + ' has successfully joined the battle!'
+    def addParticipant(self,charName,battleId):
+        battle = self.getBattle(battleId)
+        battle.addParticipant(charName)
+        return charName + ' has successfully joined the battle!'
         
     def getModifiers(self,serverId,charName):
         char = self.getCharacter(serverId,charName)
