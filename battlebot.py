@@ -644,7 +644,7 @@ def deleteChar(codex, author):
         return "You need Manage Messages or Administrator permission to delete other players' characters!"
 
 def passTurn(codex, author):
-    char = self.currentChar(author.server.id)
+    char = db.getCurrentChar(author.server.id)
     if author.id == char.userid or author.server_permissions.administrator or author.server_permissions.manage_messages:
         return 'Turn passed successfully.\n\n' + db.doPassTurn(author.server.id)
     else:
