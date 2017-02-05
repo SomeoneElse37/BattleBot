@@ -90,7 +90,11 @@ def generateODSFromCharacters(characters,grid=False,path=False):
         #Fill in the stats
         for atribute in atributes:
             #get the stat
-            insert=characters[char].statPoints[atribute]
+            if not characters[char].secret:
+                insert=characters[char].statPoints[atribute]
+            else:
+                insert=0
+            
             if insert == 0:
                 #if insert ==0 it will become "" in the excelsheet. This prevents that from happening
                 insert="0"

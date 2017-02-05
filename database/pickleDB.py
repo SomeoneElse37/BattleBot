@@ -54,7 +54,7 @@ class Database:
         return self.db[serverId].characters
     def getCharacter(self,serverId,charName):
         battle =self.getBattle(serverId)
-        return battle[charName.lower()]
+        return battle.characters[charName.lower()]
     def insertCharacter(self,server,char):
         if not self.guildExists(server):
             self.createGuild(server)
@@ -62,7 +62,7 @@ class Database:
         
     def toggleSecretChar(self,serverId,charName):
         char = self.getCharacter(serverId,charName)
-        char.toggleSecret()
+        char.secret = not char.secret
         return char
     
     def updateStats(self,serverId,charName,stats,overwriteBattleLock=False):
