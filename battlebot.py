@@ -616,7 +616,7 @@ def battleStatus(codex, author):
     return str(battle)
 
 def charData(codex, author):
-    char = db.getCharacter(author.server.id,codex[1])
+    char = db.getCharacter(author.server.id,codex[0])
     if char.userid == author.id:
         char.username = author.display_name
     return str(char)
