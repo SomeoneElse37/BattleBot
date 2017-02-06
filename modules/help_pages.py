@@ -330,6 +330,7 @@ These commands/behaviors only function if you are a GM, meaning that you have ei
     If 0 or a negative number is specified for acc or atk, those stats will not be rolled.
     If anything at all is given for the fourth parameter, the bot will not echo the Accuracy or Attack specified.
     It's up to you to delete/edit your post to prevent players from reading the stats from it.
+/setsize x y: Set the size of the battlefield to (x, y).
 /excel: Generate an ODF spreadsheet of... something. I'm not sure what.""",
         'calc': """Calculation Commands
 These just roll dice and calculate stuff. They have no effect on the battle at all.
@@ -353,3 +354,4 @@ These just roll dice and calculate stuff. They have no effect on the battle at a
     Returns a histogram. Each row is a bucket of bucketSize, collecting all rolls from one algorithm within its range.
     The even-numbered rows correspond to the count-and-add algorithm; the odd ones to the new statistical algorithm.
 /calc rpn ...: Invoke BattleBot's RPN parser. Type /help rpn for more info."""}
+

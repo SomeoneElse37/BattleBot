@@ -9,6 +9,7 @@ def clampPosWithinField(pos, fieldSize):
     elif y >= fieldSize[1]:
         y = fieldSize[0] - 1
     return x, y
+
 class Battle:
     """Corresponds to a Guild, and stores a list of characters within that Guild as well as who's participating in the battle, turn order, etc."""
 
@@ -93,6 +94,7 @@ class Battle:
         out += 'Characters:\n'
         for k, v in self.characters.items():
             out += v.name + ' '
+        out += '\nSize: {!s}'.format(self.size)
         if len(self.participants) > 0:
             out += '\n\nOrder of Initative [current HP]:\n'
             for char in self.participants:

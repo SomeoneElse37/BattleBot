@@ -609,7 +609,6 @@ def clearBattle(codex, author):
 
 def joinBattle(codex, author):
     return db.addParticipant(codex[0],author.server.id)
-    
 
 def battleStatus(codex, author):
     battle = db.getBattle(author.server.id)
@@ -805,13 +804,14 @@ def parseModifier(codex):
         isMult = False
         factor = int(factor)
     return (stat, factor, dur, isMult)
+
 #This needs to be better abstracted if we want to switch to SQL.
 def addModifier(codex, author):
-    battle = db.getBattle(author.server.id)#database[author.server.id]
-    char = db.getCharacter(author.server.id,codex[0].lower())#battle.characters[codex[0].lower()]
+    battle = db.getBattle(author.server.id)     #database[author.server.id]
+    char = db.getCharacter(author.server.id,codex[0].lower())   #battle.characters[codex[0].lower()]
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
         try:
-            owner = db.getCharacter(codex[-1].lower())#battle.characters[codex[-1].lower()]
+            owner = db.getCharacter(codex[-1].lower())  #battle.characters[codex[-1].lower()]
         except KeyError:
             owner = None
         mod = Modifier(parseModifier(codex[1:]), holder=char, owner=owner) # Will automatically attach itself to the correct characters
@@ -846,7 +846,7 @@ def toggleSecret(codex, author):
     #battle = database[author.server.id]
     #char = battle.characters[codex[0].lower()]
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
-        char= db.toggleSecretChar(author.server.id,codex[0].lower())
+        char= db.toggleSecretChar(author.server.id, codex[0].lower())
         #char.secret = not char.secret
         return str(char)
     else:
@@ -855,7 +855,7 @@ def toggleSecret(codex, author):
 def gm_attack(codex, author):
     #battle = database[author.server.id]
     #char = battle.characters[codex[0].lower()]
-    char =  db.getCharacter(author.server.id,codex[0].lower())
+    char =  db.getCharacter(author.server.id, codex[0].lower())
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
         acc = int(codex[1])
         atk = int(codex[2])
@@ -868,6 +868,12 @@ def gm_attack(codex, author):
             return char.rollFullAttack(acc, atk, secret=secret)[0]
     else:
         return "You need Manage Messages or Administrator permission to perform GM attacks!"
+
+def setSize(codex, author):
+    if author.server_permissions.administrator or author.server_permissions.manage_messages:
+        return db.updateSize(author.server.id, int(codex[0]), int(codex[1]))
+    else:
+        return "You need Manage Messages or Administrator permission to change the size of the battlefield!"
 
 ##################################################
 ##### Bot boilerplate code exists below here #####
@@ -984,6 +990,8 @@ def getReply(content, message):
             return toggleSecret(codex[1:], message.author)
         elif codex[0] == 'gmattack':
             return gm_attack(codex[1:], message.author)
+        elif codex[0] == 'setsize':
+            return setSize(codex[1:], message.author)
         elif codex[0] == 'github':
             return git_link
         elif codex[0] == 'invite':
