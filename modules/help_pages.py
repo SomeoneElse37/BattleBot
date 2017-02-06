@@ -115,33 +115,38 @@ The map will show characters with the first two letters in their name. If two ch
 I plan to have /map automatically give a view of the most interesting area of the battlefield eventually, but I'm not quite entirely sure how to do that. Any ideas?""",
         'stats': """Stats and How They Work
 
-Battlebot's stat system is a bit complex, so I thought I ought to explain it here.
-
-Each race is given a set of default stats. Currently, these depend solely on the size tier of the species, but if Lens wishes, I can give each species its own default stats quite easily. Just say the word.
-Type /calc defaultstats to see what these size-based stats are.
-
-Anyhow, each player character is given a set number of stat points, as mandated by the GM, to distribute among the six stats as they wish. Each point allocated to a stat increases it by *one eighth of the stat's default value*.
-
-For instance, werecats have 16 base HP. A werecat with 0 points allocated to HP will have, well, 16 HP. No points allocated = no change in the stat.
-A werecat with one point in HP will have 16 + (1 * 16 / 8) = 18 HP.
-A werecat with 4 points in HP will have 16 + (4 * 16 / 8) = 24 HP.
-
-Allocating 4 points will multiply the default stat by 1.5, and allocating 8 points will double it. It's pretty linear.
-
-What are these stats, you ask? Well.
+Battlebot's stat system is a bit complex, so I thought I ought to explain it here. Each character has six different stats:
 HP: Health points. Basically how much damage you can take before you die.
 ACC: Accuracy. The more of this you have, the more likely you'll actually be able to land an attack.
 EVA: Evasion. The more of this you have, the better your chances of dodging an attack and taking no damage at all.
 ATK: Attack. How hard you hit.
 DEF: Defense. How well you are able to resist being hit.
-SPD: Speed. Determines order of initiative and how quickly you can move around the battlefield.""",
+SPD: Speed. Determines order of initiative and how quickly you can move around the battlefield.
+
+In addition, there are four different ways the word "stat" can be used:
+Species Stats: The "base" stats shared by all members of a species. Currently, these are
+    shared across *size tiers*, not just species. See /calc defaultstats for details.
+Stat Points: These are specific to each individual. Players are given a GM-specified number
+    of these to distribute across their six stats as they choose.
+Unmodified Stats: The results of combining the Species Stats and Stat points, calculated as
+    UnmodifiedStat = SpeciesStat \* (1 + (StatPoints / 8)). See below.
+Effective Stats: The result of applying modifiers to the Unmodified Stats. See /help modifier for details.
+
+Each point allocated to a stat increases the unmodified stat from the base species stat by *one eighth of that species stat*.
+
+For instance, werecats have 16 species HP. A werecat with 0 points allocated to HP will have, well, 16 HP.
+    No points allocated = no change in the stat.
+A werecat with one point in HP will have 16 \* (1 + 1 / 8) = 18 HP.
+A werecat with 4 points in HP will have 16 \* (1 + 4 / 8) = 24 HP.
+
+Allocating 4 points will multiply the species stat by 1.5, and allocating 8 points will double it. It's pretty linear.""",
         'modifier': """Modifiers
 
 Battlebot supports modifiers to stats, of the multiplicative and additive varieties.
-When computing a character's effective stats, BattleBot first looks at their base stats and stat points, as described in /help stats.
-Then, BattleBot goes through each multiplicative modifier for that stat, multiplies them together, and multiplies the number calculated above by that product.
-After that, BattleBot adds together all the additive modifiers for the stat, and adds the sum to the above product.
-Finally, after all that is done, BattleBot rounds the result down to an integer.
+When computing a character's effective stats, BattleBot first computer their unmodified stats as described in /help stats.
+Then, BattleBot multiplies together all the character's multiplicative modifiers on each stat, and does the same for the additive modifiers.
+The effective stats are computed as follows:
+EffectiveStat = floor(UnmodifiedStat \* MultiplicativeModifiers + AdditiveModifiers)
 
 Each modifier has the following data:
     Stat: Which stat the modifier, well, modifies.
