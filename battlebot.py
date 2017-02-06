@@ -22,6 +22,8 @@ from classes.battles import Battle,clampPosWithinField
 from classes.modifiers import Modifier
 from classes.abilities import Ability
 
+
+
 #other custom stuff that needs to get imported
 from modules.help_pages import help_dict
 from database.loadDatabase import makeDB
@@ -821,7 +823,7 @@ def addModifier(codex, author):
 
 def warp(codex, author):
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
-        return db.updateLocation(autor.server.id,codex[0].lower(),int(codex[1]), int(codex[2]))
+        return db.updateLocation(author.server.id,codex[0].lower(),int(codex[1]), int(codex[2]))
         #return str(char)
     else:
         return "You need Manage Messages or Administrator permission to teleport characters!"
