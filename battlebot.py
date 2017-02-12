@@ -403,8 +403,7 @@ def magnitude(vec):
     return math.hypot(vec[0], vec[1])
 
 # Pythagorean distance formula.
-def distance(pos1, pos2):
-    return math.hypot(pos1[0] - pos2[0], pos1[1] - pos2[1])
+
 
 # If you're at (0, 0) and you move dist units in the direction of target, this will return where you wind up, rounded to integers as an (x, y) pair.
 # Rounds coordinates toward 0, so this will never return a vector with magnitude greater than magn. I think. Right?
@@ -811,7 +810,7 @@ def addModifier(codex, author):
     char = db.getCharacter(author.server.id,codex[0].lower())   #battle.characters[codex[0].lower()]
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
         try:
-            owner = db.getCharacter(codex[-1].lower())  #battle.characters[codex[-1].lower()]
+            owner = db.getCharacter(author.server.id,codex[-1].lower())  #battle.characters[codex[-1].lower()]
         except KeyError:
             owner = None
         mod = Modifier(parseModifier(codex[1:]), holder=char, owner=owner) # Will automatically attach itself to the correct characters

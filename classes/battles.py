@@ -34,6 +34,7 @@ class Battle:
     def clear(self):
         for k, v in self.characters.items():
             v.respawn()
+            v.isDead=False
         self.participants = []
         self.turn = -1
         for m in self.orphanModifiers:
@@ -128,17 +129,25 @@ class Battle:
             m.tick()
 
     def passTurn(self):
-        self.currentChar().tickModifiers()
-        self.currentChar().tickAbilities()
-        self.moved = False
-        self.attacked = False
-        if self.turn == -1:
-            self.turn = 1
-        else:
-            self.turn += 1
-        if self.turn >= len(self.participants):
-            self.turn = 0
-            self.tickOrphanModifiers()
+        while True:
+            self.currentChar().tickModifiers()
+            self.currentChar().tickAbilities()
+            self.moved = False
+            self.attacked = False
+            if self.turn == -1:
+                self.turn = 1
+            else:
+                self.turn += 1
+            if self.turn >= len(self.participants):
+                self.turn = 0
+                self.tickOrphanModifiers()
+            print(self.turn)
+            print(self.currentChar())
+            try:
+                if not self.currentChar().isDead:
+                    break
+            except AttributeError:
+                break
 
     def availableActions(self):
         if self.moved and self.attacked:
@@ -161,8 +170,9 @@ class Battle:
             return target.name + ' is too far away!'
         out, damage = target.rollFullAttack(user.acc(), user.atk(), secret=user.secret)
         if target.health <= 0:
-            self.removeParticipantByChar(target)
-            target.respawn()
+            target.isDead=True
+            #self.removeParticipantByChar(target)
+            #target.respawn()
         self.attacked = True
         out += self.availableActions()
         if self.moved:
@@ -275,8 +285,9 @@ class Battle:
                     out = ability.execute(user, self.participants, targets=targets)
             for char in self.participants:
                 if char.health <= 0:
-                    self.removeParticipantByChar(char)
-                    char.respawn()
+                    char.isDead=True
+                    #self.removeParticipantByChar(char)
+                    #char.respawn()
             self.attacked = True
             out += self.availableActions()
             if self.moved:
