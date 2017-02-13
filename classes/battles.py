@@ -23,7 +23,6 @@ class Battle:
         self.size = (2048, 2048)
         self.moved = False      # True if the current character has /moved during their turn
         self.attacked = False   # True if the current character has /attacked or used an /ability during their turn
-        self.orphanModifiers = []
 
     def addCharacter(self, char):
         if char.name.lower() not in self.characters:
@@ -36,9 +35,6 @@ class Battle:
             v.respawn()
         self.participants = []
         self.turn = -1
-        for m in self.orphanModifiers:
-            m.revoke()
-        self.orphanModifiers = []
 
     # Warning: May give undefined behavior if char is not already in the characters dictionary
     def addParticipantByChar(self, char):
@@ -119,13 +115,6 @@ class Battle:
             self.removeParticipantByChar(char)
         except ValueError:
             pass
-
-    def addOrphanModifier(self, mod):
-        self.orphanModifiers.append(mod)
-
-    def tickOrphanModifiers(self):
-        for m in self.orphanModifiers:
-            m.tick()
 
     def passTurn(self):
         while True:

@@ -809,13 +809,8 @@ def addModifier(codex, author):
     battle = db.getBattle(author.server.id)     #database[author.server.id]
     char = db.getCharacter(author.server.id,codex[0].lower())   #battle.characters[codex[0].lower()]
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
-        try:
-            owner = db.getCharacter(author.server.id,codex[-1].lower())  #battle.characters[codex[-1].lower()]
-        except KeyError:
-            owner = None
+        owner = db.getCharacter(author.server.id,codex[-1].lower())  #battle.characters[codex[-1].lower()]
         mod = Modifier(parseModifier(codex[1:]), holder=char, owner=owner) # Will automatically attach itself to the correct characters
-        if owner is None:
-            battle.addOrphanModifier(mod)
         return char.listModifiers()
     else:
         return "You need Manage Messages or Administrator permission to create modifiers!"

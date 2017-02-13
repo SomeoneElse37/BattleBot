@@ -10,6 +10,10 @@ def _updateDBFormat(database):
                 # Ex:
                 # if not hasattr(v, 'moved'):
                 #     v.moved = False
+                if hasattr(v, 'orphanModifiers'):
+                    for mod in v.orphanModifiers:
+                        mod.revoke()
+                    delattr(v, 'orphanModifiers')
 
                 for l, w in v.characters.items():
                     # Character attributes: username, userid, name, race, size, statPoints, baseStats, abilities, modifiers, health, location, secret
