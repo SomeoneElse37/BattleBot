@@ -148,6 +148,7 @@ class Character:
         self.health = self.hp()
         self.pos = (0, 0)       # X and Y coordinates
         self.secret = secret    # If true, this character's stats will not be reported to players (used for some NPCs)
+        self.ephemeral = false  # If true, this character will vanish on death, removing themself from the battle and revoking all their modifiers. Intended for minions.
 
     def isDead(self):
         return self.health <= 0
@@ -250,6 +251,11 @@ Health: {:d}""".format(self.username, self.userid, self.name, self.race, int(sel
         self.health = self.hp()
         self.clearModifiers()
         self.clearTimeouts()
+
+    def onDeath(self):
+        # Fancy on-death triggered abilities could go here.
+        if self.ephemeral:
+            self.respawn()
 
     # Rolls an accuracy check against this character. Used in some of the methods below, and I plan to make this available to GMs
     # directly for special attacks.

@@ -1,6 +1,7 @@
-_CURRENT_DB_VERSION = 16
-from classes.battles  import Battle
+_CURRENT_DB_VERSION = 17
+from classes.battles import Battle
 #This file contains everything to interact with the pickle version of the database
+
 def _updateDBFormat(database):
     if 'version' not in database or database['version'] < _CURRENT_DB_VERSION:
         print("Updating database format.")
@@ -17,19 +18,16 @@ def _updateDBFormat(database):
 
                 for l, w in v.characters.items():
                     # Character attributes: username, userid, name, race, size, statPoints, baseStats, abilities, modifiers, health, location, secret
-                    # Ex:
-                    # if not hasattr(w, 'abilities'):
-                    #     w.abilities = []
+                    if not hasattr(w, 'ephemeral'):
+                        w.ephemeral = False
 
                     for m, x in w.abilities.items():
-                    # Ability attributes: name, range, cooldown, timeout, targets, limit, steps, flavor
-
-                    if database['version'] == 15 and 'location' in x.targets:
-                        x.targets.add('self')
-                        x.targets.add('ally')
-                        x.targets.add('enemy')
+                        # Ability attributes: name, range, cooldown, timeout, targets, limit, steps, flavor
+                        if 'self' not in x.targets and 'ally' not in x.targets and 'enemy' not in x.targets:
+                            x.targets.add('self')
+                            x.targets.add('ally')
+                            x.targets.add('enemy')
         database['version'] = _CURRENT_DB_VERSION
-
 
 class Database:
     def __init__(self,fileName,pickle):

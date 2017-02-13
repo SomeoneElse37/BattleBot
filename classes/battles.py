@@ -147,6 +147,11 @@ class Battle:
         else:
             return '\n\nYou may use /move and either /attack or /ability this turn, if you wish.'
 
+    def onDeath(self, char):
+        char.onDeath()
+        if char.ephemeral:
+            removeParticipantByChar(char)
+
     def basicAttack(self, targetName):
         if self.attacked:
             return self.availableActions()
@@ -158,6 +163,7 @@ class Battle:
             return target.name + ' is too far away!'
         out, damage = target.rollFullAttack(user.acc(), user.atk(), secret=user.secret)
         if target.health <= 0:
+            target.onDeath()
             #self.removeParticipantByChar(target)
             #target.respawn()
         self.attacked = True
@@ -248,6 +254,7 @@ class Battle:
         ability = user.abilities[codex[0].lower()]
         codex = codex[1:]
         out = ''
+        prevDeadChars = {ch for ch in self.participants if ch.isDead()}
         try:
             if 'location' in ability.targets:
                 path, maxDist, stop = self.parseDirectionList(user.pos, codex)
@@ -271,7 +278,8 @@ class Battle:
                         targets.append(char)
                     out = ability.execute(user, self.participants, targets=targets)
             for char in self.participants:
-                if char.health <= 0:
+                if char.isDead() and char not in prevDeadChars:
+                    char.onDeath();
                     #self.removeParticipantByChar(char)
                     #char.respawn()
             self.attacked = True
