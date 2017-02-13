@@ -317,7 +317,7 @@ These commands/behaviors only function if you are a GM, meaning that you have ei
 /pass, /attack, /delete, etc: GMs can use these commands to control or mess with other players' characters.
     GMs can also /restat characters that are currently partaking in a battle.
 /clear: Clear the current battle and heal and respawn all participants.
-/addModifier name [+|-]factor[%] stat duration [owner]: Added a modifier to the named character.
+/addModifier name [+|-]factor[%] stat duration owner: Added a modifier to the named character.
     If the % is omitted, create an additive multiplier that increases the stat by the specified amount (or dereases it, if negative).
     If the % is present. what happens depends on the sign given, if any.
         Plus sign means "increase this stat by the specified pecentage"
