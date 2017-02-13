@@ -1,5 +1,8 @@
+
 class Ability:
     """Represents an Ability that a character may call upon at any time. On their turn, at least."""
+
+    # Ability attributes: name, range, cooldown, timeout, targets, limit, steps, flavor
 
     # Codex format: abilityName range cooldown ((self | ally | enemy)+ | location) [limit]
     def setFields(self, codex):
@@ -7,20 +10,18 @@ class Ability:
         self.range = int(codex[0])
         self.cooldown = int(codex[1])
         self.timeout = 0
-        if codex[2] == 'location' or codex[2] == 'aoe':
-            self.targets = {'location'}
-            self.limit = int(codex[3])
-        else:
-            self.targets = set()
-            i = 2
-            try:
-                while codex[i] in {'self', 'ally', 'enemy'}:
-                    self.targets.add(codex[i])
-                    i += 1
-                self.limit = int(codex[-1])
-            except IndexError:  # No limit was given
-                self.limit = 1  # so, by default, will only permit one target
-
+        self.targets = set()
+        i = 2
+        try:
+            while codex[i] in {'location', 'aoe', 'self', 'ally', 'enemy', 'corpse'}:
+                self.targets.add(codex[i])
+                i += 1
+            self.limit = int(codex[-1])
+        except IndexError:  # No limit was given
+            self.limit = 1  # so, by default, will only permit one target
+        if 'aoe' in self.targets:
+            self.targets.remove('aoe')
+            self.targets.add('location')
 
     def __init__(self, codex):
         self.name = codex[0]
@@ -139,7 +140,7 @@ class Ability:
             raise ValueError('This ability is on cooldown for {:d} more turns.'.format(self.timeout))
         if locus is not None:
             if user.distanceTo(locus) <= self.range:
-                targets = [char for char in participants if char.distanceTo(locus) <= self.limit]
+                targets = [char for char in participants if char.distanceTo(locus) <= self.limit and ((char.isDead()) == ('corpse' in self.targets))]
                 shuffle(targets)
             else:
                 raise ValueError('That location is {:d} tiles away from you. This ability has a range of {:d}.'.format(user.distanceTo(locus), self.range))
@@ -150,6 +151,10 @@ class Ability:
                         raise ValueError('{} is {:d} tiles away from you. This ability has a range of {:d}.'.format(char.name, user.distanceTo(char.pos), self.range))
                     if char not in participants:
                         raise ValueError('{} is not participating in this battle!'.format(char.name))
+                    if char.isDead() and 'corpse' not in self.targets:
+                        raise ValueError('{} is dead, and this ability cannot target corpses.'.format(char.name))
+                    if not char.isDead() and 'corpse' in self.targets:
+                        raise ValueError('{} is not dead, and this ability can only target corpses.'.format(char.name))
             else:
                 raise ValueError('Too many targets. Requires {:d} or less; got {:d}.'.format(self.limit, len(targets)))
         log = ''
@@ -175,3 +180,4 @@ class Ability:
 
     def __repr__(self):
         return '{} ({:d})'.format(self.name, self.timeout)
+

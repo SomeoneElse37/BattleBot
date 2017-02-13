@@ -1,5 +1,6 @@
 import math
 from random import randint, gauss, shuffle
+
 def prettyDamage(atk, dfn, secrets=(False, False)):
     s1, r1 = prettyRoll(atk, secrets[0])
     s2, r2 = prettyRoll(dfn, secrets[1])
@@ -14,6 +15,7 @@ def damageString(r1, r2):
         return out + "The attack was blocked.", 0
     else:
         return out + "The attacker dealt " + str(dmg) + " damage.", dmg
+
 def d10(times, sides):
     dice_list = []
     for foo in range(0, times):
@@ -44,12 +46,14 @@ accCheckFlavors = [
         'Critical hit? Maybe?'
         ]
 
+
 aglCheckFlavors = [
         'No. Not even close.',
         "Couldn't quite escape melee range.",
         'Just made it out of melee range.',
         'Easily escaped melee range.'
         ]
+
 def checkString(r1, r2, flavors=accCheckFlavors):
     diff = r1 - r2
     if diff < -20:
@@ -60,6 +64,7 @@ def checkString(r1, r2, flavors=accCheckFlavors):
         return flavors[2]
     else:
         return flavors[3]
+
 def formatRoll(rolls):
     return(str(sum(rolls)) + ' = ' + str(rolls))
 
@@ -82,8 +87,7 @@ def statString(stats):
 
 class Character:
     """Represents a character known to BattleBot."""
-    
-   
+
     sizeTiers = {
         'faerie': 1,
         'elf': 2,
@@ -96,6 +100,7 @@ class Character:
         'elfship': 3,
         'steamship': 3
         }
+
     baseStats = {
         'faerie': defaultStats(sizeTiers['faerie']),    # This sets the base stats for each species to the default, computed from their size.
         'elf': defaultStats(sizeTiers['elf']),          # If Lens wants different base stats for any/all races, I can hardcode that easily.
@@ -108,7 +113,7 @@ class Character:
         'elfship': defaultStats(sizeTiers['elfship']),
         'steamship': defaultStats(sizeTiers['steamship']),
         }
-   
+
     def clearModifiers(self):
         if hasattr(self, 'modifiers'):
             for pair in self.modifiers.values():
@@ -130,7 +135,6 @@ class Character:
         self.size = Character.sizeTiers[self.race]
         self.statPoints = statpoints
         self.baseStats = Character.baseStats[self.race]
-        self.isDead = False
         # Modifiers are stored in this dictionary.
         # The keys are the same as in all the various stat dictionaries. HP, ACC, EVA, etc.
         # Each value is a pair of lists. The first element in each pair is a list of multiplicative modifiers (e.g. 120% STR for 2 turns);
@@ -144,6 +148,9 @@ class Character:
         self.health = self.hp()
         self.pos = (0, 0)       # X and Y coordinates
         self.secret = secret    # If true, this character's stats will not be reported to players (used for some NPCs)
+
+    def isDead(self):
+        return self.health <= 0
 
     # # (stat, factor, duration, isMult)
     # def createModifier(self, theTuple):

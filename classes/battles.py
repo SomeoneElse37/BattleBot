@@ -34,7 +34,6 @@ class Battle:
     def clear(self):
         for k, v in self.characters.items():
             v.respawn()
-            v.isDead=False
         self.participants = []
         self.turn = -1
         for m in self.orphanModifiers:
@@ -144,7 +143,7 @@ class Battle:
             print(self.turn)
             print(self.currentChar())
             try:
-                if not self.currentChar().isDead:
+                if not self.currentChar().isDead():
                     break
             except AttributeError:
                 break
@@ -170,7 +169,6 @@ class Battle:
             return target.name + ' is too far away!'
         out, damage = target.rollFullAttack(user.acc(), user.atk(), secret=user.secret)
         if target.health <= 0:
-            target.isDead=True
             #self.removeParticipantByChar(target)
             #target.respawn()
         self.attacked = True
@@ -285,7 +283,6 @@ class Battle:
                     out = ability.execute(user, self.participants, targets=targets)
             for char in self.participants:
                 if char.health <= 0:
-                    char.isDead=True
                     #self.removeParticipantByChar(char)
                     #char.respawn()
             self.attacked = True

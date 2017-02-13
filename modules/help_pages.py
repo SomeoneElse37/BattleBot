@@ -181,12 +181,14 @@ BattleBot's ability system uses four commands.
         Cooldown 1 means that you will not be able to use the ability again for one turn after using it
                 (so you can use it every other turn).
         Cooldown 0 is no cooldown.
-    targetTypes: Can take one of two forms.
-        If "location" or "aoe", the ability will be an AoE ability aimed at a location in the grid.
-        If not, then targetTypes must be "self", "ally", "enemy", or some combination thereof,
-                such as "self ally" or "ally enemy".
-            This restricts who the ability can target. Note that BattleBot does not have any way to know
-            who is an ally and who is an enemy (yet), so "ally" and "enemy" are equivalent.
+    targetTypes: A list of any combination of the following words, separated by spaces.
+        location: This is an AoE ability, to be aimed at a location on the grid.
+        aoe: Alias for location.
+        self: Ability can target the user.
+        ally: Ability can target the user's teammates.
+        enemy: Ability can target the user's opponents.
+            Note: As BattleBot does not handle teams (yet), ally and enemy are synonymous.
+        corpse: Ability can ONLY target characters on the battlefield that are dead.
     limit: For AoE abilities, the radius of the affected area. For targeted abilities, the maximum number of targets.
             Deaults to 1.
 /editability: See /help ability2""",
@@ -194,8 +196,6 @@ BattleBot's ability system uses four commands.
 
 /editability name abilityName [n] action rpn ...: Edits the sequence of steps that the ability performs for each target.
     n: If given, replace line n rather than appending step n to the end of the list.
-    rpn: The last parameter to /editability must be an RPN expression. It is executed whenever the ability is used,
-            and its return value determines what will happen. See /rpn for details.
     action: What this step of the ability is supposed to do. Can take any one of the following formats:
         calc var: Executes the RPN expression, and stores its result in a variable called var for use in later steps.
             If the ability already has a step to calculate var, replace that step.
@@ -213,6 +213,8 @@ BattleBot's ability system uses four commands.
                 Defaults to target if neither are given.
         flavor: Set the ability's flavor text.
         delete n: Delete step n from the ability.
+    rpn: The last parameter to /editability must be an RPN expression. It is executed whenever the ability is used,
+            and its return value determines what will happen. See /rpn for details.
 
 Type /help ability3 for an example.""",
         'ability3': """A Shocking Example
