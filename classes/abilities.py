@@ -13,7 +13,7 @@ class Ability:
         self.targets = set()
         i = 2
         try:
-            while codex[i] in {'location', 'aoe', 'self', 'ally', 'enemy', 'corpse'}:
+            while codex[i] in {'location', 'aoe', 'random', 'self', 'ally', 'enemy', 'corpse', 'ability', 'modifier', 'reaction'}:
                 self.targets.add(codex[i])
                 i += 1
             self.limit = int(codex[-1])
