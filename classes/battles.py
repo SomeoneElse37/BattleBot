@@ -131,7 +131,6 @@ class Battle:
                 self.turn += 1
             if self.turn >= len(self.participants):
                 self.turn = 0
-                self.tickOrphanModifiers()
             print(self.turn)
             print(self.currentChar())
             try:
