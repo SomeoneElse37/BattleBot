@@ -21,12 +21,8 @@ def _updateDBFormat(database):
                     if not hasattr(w, 'ephemeral'):
                         w.ephemeral = False
 
-                    for m, x in w.abilities.items():
+                    # for m, x in w.abilities.items():
                         # Ability attributes: name, range, cooldown, timeout, targets, limit, steps, flavor
-                        if 'self' not in x.targets and 'ally' not in x.targets and 'enemy' not in x.targets:
-                            x.targets.add('self')
-                            x.targets.add('ally')
-                            x.targets.add('enemy')
         database['version'] = _CURRENT_DB_VERSION
 
 class Database:

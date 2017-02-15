@@ -1,3 +1,4 @@
+from random import uniform
 
 class Ability:
     """Represents an Ability that a character may call upon at any time. On their turn, at least."""
@@ -39,6 +40,13 @@ class Ability:
     def parseStep(self, codex):
         out = []
         codex = [s.lower() for s in codex]
+        try:
+            i = codex.index(':')
+            theRest = codex[(i+1):]
+            codex = codex[:i]
+        except ValueError:
+            theRest = None
+
         if codex[0] == 'calc':
             out = codex[:2]
             codex = codex[2:]
@@ -62,19 +70,27 @@ class Ability:
         elif codex[0] == 'effect':
             out = [codex[0]]
             codex = codex[1:]
-            if codex[0] in {'damage', 'apply'}:
+            if codex[0] in {'extend', 'cancel', 'steal', 'redirect'}:
                 out.append(codex[0])
                 codex = codex[1:]
             else:
-                out.append('apply')
-            if codex[0] in {'self', 'target'}:
-                out.append(codex[0])
-                codex = codex[1:]
-            else:
-                out.append('target')
+                if codex[0] in {'damage', 'apply'}:
+                    out.append(codex[0])
+                    codex = codex[1:]
+                else:
+                    out.append('apply')
+                if codex[0] in {'self', 'target'}:
+                    out.append(codex[0])
+                    codex = codex[1:]
+                else:
+                    out.append('target')
         else:
             raise ValueError('Invalid /editability command: {}'.format(codex[0]))
-        out.append(codex)
+
+        if theRest is None:
+            out.append(theRest)
+        else:
+            out.append(codex)
         return out
 
 
@@ -135,13 +151,66 @@ class Ability:
                     log += '\n{} gets {} for {:d} turns.'.format(char.name, mod.short(), mod.duration)
         return log
 
+    def calcWeights(self, user, candidates):
+        weights = []
+        for target in candidates:
+            data = dict(self=user, target=target, secrets=(user.secret, target.secret))
+            for step in self.steps:
+                if step[0] == 'calc':
+                    result, flavor = parseRPN(step[-1], data=data, functions=auxFunctions)
+                    data[step[1]] = result
+                weights.append(data['weight'], target)
+        return weights.sort()
+
+    def canHit(self, user, locus, char):
+        if char.distanceTo(locus) > self.limit:
+            return False
+        if ((char.isDead()) != ('corpse' in self.targets)):
+            return False
+        if char is user and 'self' not in self.targets:
+            return False
+        if char is not user and 'ally' not in self.targets and 'enemy' not in self.targets:
+            return False
+        return True
+
+    def getAllTargetsInRange(self, user, participants, locus):
+        targets = [char for char in participants if self.canHit(user, locus, char)]
+        shuffle(targets)
+        return targets
+
+    def pickAndRemove(candidates, n, weight):
+        w = weight
+        i = len(candidates) - 1
+        if i < 0:
+            return None
+        while w > n and i >= 0:
+            w -= candidates[i][0]
+            i -= 1
+        i += 1
+        out = candidates[i]
+        del candidates[i]
+        return out
+
     def execute(self, user, participants, targets=None, locus=None):
         if self.timeout > 0:
             raise ValueError('This ability is on cooldown for {:d} more turns.'.format(self.timeout))
-        if locus is not None:
+        if 'random' in self.targets:
+            candidates = getAllTargetsInRange(user, participants, user.pos)
+            if self.limit < len(candidates):
+                self.calcWeights(user, candidates)
+                totalWeight = 0
+                for weight, char in candidates:
+                    totalWeight += weight
+                targets = set()
+                for i in range(self.limit):
+                    w, nextTarget = pickAndRemove(candidates, uniform(0, weight), weight)
+                    totalWeight -= w
+                    targets.add(nextTarget)
+            else:
+                targets = set(candidates)
+        elif locus is not None:
             if user.distanceTo(locus) <= self.range:
-                targets = [char for char in participants if char.distanceTo(locus) <= self.limit and ((char.isDead()) == ('corpse' in self.targets))]
-                shuffle(targets)
+                targets = getAllTargetsInRange(user, participants, locus)
             else:
                 raise ValueError('That location is {:d} tiles away from you. This ability has a range of {:d}.'.format(user.distanceTo(locus), self.range))
         else:
@@ -173,6 +242,7 @@ class Ability:
             # out += str(step)
             rpn = step[-1]
             step = step[:-1]
+            step.append(':')
             step.extend(rpn)
             for cmd in step:
                 out += cmd + ' '
