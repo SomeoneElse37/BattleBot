@@ -387,7 +387,7 @@ def useAbility(codex, author):
     #battle = database[author.server.id]
     char = db.getCurrentChar(author.server.id)
     if author.id == char.userid or author.server_permissions.administrator or author.server_permissions.manage_messages:
-        return db.useAbility(codex,author.server.id)#battle.useAbility(codex) + '\n\n' + battle.currentCharPretty()
+        return db.doAbility(codex,author.server.id)#battle.useAbility(codex) + '\n\n' + battle.currentCharPretty()
     else:
         return "You need Manage Messages or Administrator permission to take control of other players' characters!"
 

@@ -1,4 +1,4 @@
-from random import uniform
+from random import uniform, shuffle
 
 from calc.vector import *
 from calc.rpn import *
@@ -169,7 +169,7 @@ class Ability:
                     result, flavor = parseRPN(step[-1], data=data, functions=auxFunctions)
                     data[step[1]] = result
                 weights.append(data['weight'], target)
-        return weights.sort()
+        return list(filter((lambda w, x: w > 0), weights.sort()))
 
     def canHit(self, user, locus, char):
         if char.distanceTo(locus) > self.limit:
@@ -203,10 +203,12 @@ class Ability:
     def execute(self, user, participants, targets=None, locus=None):
         if self.timeout > 0:
             raise ValueError('This ability is on cooldown for {:d} more turns.'.format(self.timeout))
+        log = ''
         if 'random' in self.targets:
-            candidates = getAllTargetsInRange(user, participants, user.pos)
+            candidates = self.getAllTargetsInRange(user, participants, user.pos)
             if self.limit < len(candidates):
-                self.calcWeights(user, candidates)
+                candidates = self.calcWeights(user, candidates)
+                log += 'Weights: {!s}\n'.format(candidates)
                 totalWeight = 0
                 for weight, char in candidates:
                     totalWeight += weight
@@ -215,11 +217,12 @@ class Ability:
                     w, nextTarget = pickAndRemove(candidates, uniform(0, weight), weight)
                     totalWeight -= w
                     targets.add(nextTarget)
+                log += 'Targets: {!s}\n'.format(targets)
             else:
                 targets = set(candidates)
         elif locus is not None:
             if user.distanceTo(locus) <= self.range:
-                targets = getAllTargetsInRange(user, participants, locus)
+                targets = self.getAllTargetsInRange(user, participants, locus)
             else:
                 raise ValueError('That location is {:d} tiles away from you. This ability has a range of {:d}.'.format(user.distanceTo(locus), self.range))
         else:
@@ -235,11 +238,11 @@ class Ability:
                         raise ValueError('{} is not dead, and this ability can only target corpses.'.format(char.name))
             else:
                 raise ValueError('Too many targets. Requires {:d} or less; got {:d}.'.format(self.limit, len(targets)))
-        log = ''
         for char in targets:
             nextLog = self.executeInner(user, char, locus)
             log += '\n\n' + nextLog
         self.timeout = self.cooldown + 1
+        # print(log)
         return log
 
     def __str__(self):

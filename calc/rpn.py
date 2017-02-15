@@ -6,6 +6,7 @@ def sumThings(xs, data):
     return [total], '{:d} = {!s}'.format(total, xs)
 
 def flip(pair):
+    # print('##### Flipping {!s} #####'.format(pair))
     a, b = pair
     return [b], a
 

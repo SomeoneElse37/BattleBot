@@ -120,8 +120,8 @@ class Battle:
                 self.turn += 1
             if self.turn >= len(self.participants):
                 self.turn = 0
-            print(self.turn)
-            print(self.currentChar())
+            # print(self.turn)
+            # print(self.currentChar())
             try:
                 if not self.currentChar().isDead():
                     break

@@ -1,6 +1,8 @@
 # All of the dice-rolling functions are here. ALL OF THEM.
 # All the ones that don't do a whole lot else, at least.
 
+import math
+
 from random import randint, gauss
 
 def d10(times, sides):
@@ -115,5 +117,6 @@ def prettyDamage(atk, dfn, secrets=(False, False)):
     s1, r1 = prettyRoll(atk, secrets[0])
     s2, r2 = prettyRoll(dfn, secrets[1])
     dmgstr, dmg = damageString(r1, r2)
+    return s1 + '\n' + s2 + '\n' + dmgstr, dmg
 
 
