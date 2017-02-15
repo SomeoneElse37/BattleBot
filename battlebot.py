@@ -607,14 +607,14 @@ def clearBattle(codex, author):
         return "You need Manage Messages or Administrator permission to clear the battle state!"
 
 def joinBattle(codex, author):
-    return db.addParticipant(codex[0],author.server.id)
+    return db.addParticipant(codex[0], author.server.id)
 
 def battleStatus(codex, author):
     battle = db.getBattle(author.server.id)
     return str(battle)
 
 def charData(codex, author):
-    char = db.getCharacter(author.server.id,codex[0])
+    char = db.getCharacter(author.server.id, codex[0])
     if char.userid == author.id:
         char.username = author.display_name
     return str(char)
@@ -626,7 +626,7 @@ def info(codex, author):
         return charData(codex, author)
 
 def modifiers(codex, author):
-    mods = db.getModifiers(author.server.id,codex[0].lower())
+    mods = db.getModifiers(author.server.id, codex[0].lower())
     #battle = database[author.server.id]
     #char = battle.characters[]
     #mods = char.listModifiers()
@@ -636,7 +636,7 @@ def modifiers(codex, author):
         return char.name + ' has no modifiers.'
 
 def deleteChar(codex, author):
-    char = db.getCharacter(author.server.id,codex[0].lower())
+    char = db.getCharacter(author.server.id, codex[0].lower())
     if author.id == char.userid or author.server_permissions.administrator or author.server_permissions.manage_messages:
         db.deleteChar(author.server.id,codex[0])
         return codex[0] + ' was successfully deleted.'
@@ -674,12 +674,12 @@ def useAbility(codex, author):
         return "You need Manage Messages or Administrator permission to take control of other players' characters!"
 
 def createAbility(codex, author):
-    char = db.getCharacter(codex[0].lower())
+    char = db.getCharacter(author.server.id, codex[0].lower())
     #battle = database[author.server.id]
     #char = battle.characters[codex[0].lower()]
     isGM = author.server_permissions.administrator or author.server_permissions.manage_messages
     if author.id == char.userid or isGM:
-        result = db.insertAbility(codex,autor.server.id,isGM)
+        result = db.insertAbility(codex, author.server.id, isGM)
         if result:
             return result
         return "You need Manage Messages or Administrator permission to modify characters during a battle!"
@@ -700,7 +700,7 @@ def createAbility(codex, author):
 def editAbility(codex, author):
     #battle = database[author.server.id]
     #char = battle.characters[codex[0].lower()]
-    char = db.getCharacter(codex[0].lower())
+    char = db.getCharacter(author.server.id, codex[0].lower())
     isGM = author.server_permissions.administrator or author.server_permissions.manage_messages
     if author.id == char.userid or isGM:
         result = db.updateAbility(author.server.id,codex,isGM)
@@ -766,7 +766,7 @@ def restat(codex, author):
     #char = battle.characters[codex[0].lower()]
     isGM = author.server_permissions.administrator or author.server_permissions.manage_messages
     if author.id == char.userid or isGM:
-        result = db.updateStats(author.server.id,codex[0].lower(),makeStatsFromCodex[codex[1:]],isGM)
+        result = db.updateStats(author.server.id, codex[0].lower(),makeStatsFromCodex[codex[1:]],isGM)
         if result:
             return result
         return "You need Manage Messages or Administrator permission to restat your characters during a battle!"
@@ -807,7 +807,7 @@ def parseModifier(codex):
 #This needs to be better abstracted if we want to switch to SQL.
 def addModifier(codex, author):
     battle = db.getBattle(author.server.id)     #database[author.server.id]
-    char = db.getCharacter(author.server.id,codex[0].lower())   #battle.characters[codex[0].lower()]
+    char = db.getCharacter(author.server.id, codex[0].lower())   #battle.characters[codex[0].lower()]
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
         owner = db.getCharacter(author.server.id,codex[-1].lower())  #battle.characters[codex[-1].lower()]
         mod = Modifier(parseModifier(codex[1:]), holder=char, owner=owner) # Will automatically attach itself to the correct characters
@@ -817,7 +817,7 @@ def addModifier(codex, author):
 
 def warp(codex, author):
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
-        return db.updateLocation(author.server.id,codex[0].lower(),int(codex[1]), int(codex[2]))
+        return db.updateLocation(author.server.id, codex[0].lower(), int(codex[1]), int(codex[2]))
         #return str(char)
     else:
         return "You need Manage Messages or Administrator permission to teleport characters!"

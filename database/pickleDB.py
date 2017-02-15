@@ -43,8 +43,10 @@ class Database:
             self.pickle.dump(self.db, f, self.pickle.HIGHEST_PROTOCOL)
         print('Database saved to disk.')
 
-    def getBattle(self,serverId):
+    def getBattle(self, serverId):
         print(type(self.db))
+        print(str(serverId))
+        print(repr(serverId))
         return self.db[serverId]
 
     def createGuild(self,guild):
@@ -59,8 +61,8 @@ class Database:
     def getAllCharacters(self,serverId):
         return self.db[serverId].characters
 
-    def getCharacter(self,serverId,charName):
-        battle =self.getBattle(serverId)
+    def getCharacter(self, serverId, charName):
+        battle = self.getBattle(serverId)
         return battle.characters[charName.lower()]
 
     def insertCharacter(self,server,char):

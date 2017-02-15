@@ -161,9 +161,11 @@ class Battle:
             return target.name + ' is not participating in the battle!'
         if not user.canMelee(target.pos):
             return target.name + ' is too far away!'
+        if target.isDead():
+            return target.name + ' is dead!'
         out, damage = target.rollFullAttack(user.acc(), user.atk(), secret=user.secret)
         if target.health <= 0:
-            target.onDeath()
+            self.onDeath(target)
             #self.removeParticipantByChar(target)
             #target.respawn()
         self.attacked = True
@@ -256,7 +258,9 @@ class Battle:
         out = ''
         prevDeadChars = {ch for ch in self.participants if ch.isDead()}
         try:
-            if 'location' in ability.targets:
+            if 'random' in ability.targets:
+                out += ability.execute(user, self.participants)
+            elif 'location' in ability.targets:
                 path, maxDist, stop = self.parseDirectionList(user.pos, codex)
                 out, locus = user.testMove(path, maxDist, stop, self.size, True)
                 out += ability.execute(user, self.participants, locus=locus)
@@ -279,7 +283,7 @@ class Battle:
                     out = ability.execute(user, self.participants, targets=targets)
             for char in self.participants:
                 if char.isDead() and char not in prevDeadChars:
-                    char.onDeath();
+                    self.onDeath(char)
                     #self.removeParticipantByChar(char)
                     #char.respawn()
             self.attacked = True
