@@ -1,4 +1,4 @@
-from vector import *
+from calc.vector import *
 
 # Parse a string formatted like '4E', returning an (x, 0) or (0, y) pair, or raises a ValueError is the format is incorrect
 def parseCoord(strn):

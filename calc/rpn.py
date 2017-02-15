@@ -1,5 +1,5 @@
-from dice import *
-from vector import *
+from calc.dice import *
+from calc.vector import *
 
 def sumThings(xs, data):
     total = sum(xs)
