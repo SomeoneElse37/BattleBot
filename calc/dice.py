@@ -1,6 +1,8 @@
 # All of the dice-rolling functions are here. ALL OF THEM.
 # All the ones that don't do a whole lot else, at least.
 
+from random import randint, gauss
+
 def d10(times, sides):
     dice_list = []
     for foo in range(0, times):

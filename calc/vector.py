@@ -1,5 +1,18 @@
 import math
 
+# Okay, not really a vector function, but I had to put it somewhere
+def clampPosWithinField(pos, fieldSize):
+    x, y = pos
+    if x < 0:
+        x = 0
+    elif x >= fieldSize[0]:
+        x = fieldSize[0] - 1
+    if y < 0:
+        y = 0
+    elif y >= fieldSize[1]:
+        y = fieldSize[0] - 1
+    return x, y
+
 # Vector magnitude
 def magnitude(vec):
     return math.hypot(vec[0], vec[1])

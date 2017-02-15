@@ -1,17 +1,6 @@
 from calc.dice import *
+from calc.vector import *
 from calc.path import *
-
-def clampPosWithinField(pos, fieldSize):
-    x, y = pos
-    if x < 0:
-        x = 0
-    elif x >= fieldSize[0]:
-        x = fieldSize[0] - 1
-    if y < 0:
-        y = 0
-    elif y >= fieldSize[1]:
-        y = fieldSize[0] - 1
-    return x, y
 
 class Battle:
     """Corresponds to a Guild, and stores a list of characters within that Guild as well as who's participating in the battle, turn order, etc."""

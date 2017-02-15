@@ -18,7 +18,7 @@ from datetime import *
 
 #Load the custom classes
 from classes.characters import Character, makeStatDict, defaultStats, statString
-from classes.battles import Battle, clampPosWithinField
+from classes.battles import Battle
 from classes.modifiers import Modifier
 from classes.abilities import Ability
 

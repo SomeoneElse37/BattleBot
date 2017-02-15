@@ -61,7 +61,10 @@ class Ability:
             codex = codex[2:]
         elif codex[0] == 'condition':
             out = [codex[0]]
-            if codex[1] in comparisons:
+            if len(codex) <= 1:
+                out.append('>0')
+                codex = []
+            elif codex[1] in comparisons:
                 out.append(codex[1])
                 codex = codex[2:]
             elif codex[1] == '=0':
@@ -76,16 +79,16 @@ class Ability:
         elif codex[0] == 'effect':
             out = [codex[0]]
             codex = codex[1:]
-            if codex[0] in {'extend', 'cancel', 'steal', 'redirect'}:
+            if len(codex) > 0 and codex[0] in {'extend', 'cancel', 'steal', 'redirect'}:
                 out.append(codex[0])
                 codex = codex[1:]
             else:
-                if codex[0] in {'damage', 'apply'}:
+                if len(codex) > 0 and codex[0] in {'damage', 'apply'}:
                     out.append(codex[0])
                     codex = codex[1:]
                 else:
                     out.append('apply')
-                if codex[0] in {'self', 'target'}:
+                if len(codex) > 0 and codex[0] in {'self', 'target'}:
                     out.append(codex[0])
                     codex = codex[1:]
                 else:
