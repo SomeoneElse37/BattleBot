@@ -17,8 +17,8 @@ from statistics import *
 from datetime import *
 
 #Load the custom classes
-from classes.characters import Character,makeStatDict,defaultStats,statString
-from classes.battles import Battle,clampPosWithinField
+from classes.characters import Character, makeStatDict, defaultStats, statString
+from classes.battles import Battle, clampPosWithinField
 from classes.modifiers import Modifier
 from classes.abilities import Ability
 
@@ -50,6 +50,8 @@ def createExcel(characterList):
         # with open(pathToExcel, 'rb') as f:
         #    await client.send_file(channel, f)
         return {'error':False,'file':pathToExcel,'message':"",'deleteAfterUpload':True}
+
+#TODO cut starts here
 
 def d10(times, sides):
     dice_list = []
@@ -457,16 +459,11 @@ def parseDirection(codex):
 ##### Code for moderated battles begins here #####
 ##################################################
 
-
-
-
-
 def makeStatsFromCodex(codex):
     if len(codex) >= 6:
         return makeStatDict(int(codex[0]), int(codex[1]), int(codex[2]), int(codex[3]), int(codex[4]), int(codex[5]))
     else:
         return makeStatDict(0, 0, 0, 0, 0, 0)
-
 
 
 # I can use objects instantiated from a class that hasn't been defined yet, as long as I don't explicitly refer to that class, right?
@@ -679,7 +676,7 @@ def createAbility(codex, author):
     #char = battle.characters[codex[0].lower()]
     isGM = author.server_permissions.administrator or author.server_permissions.manage_messages
     if author.id == char.userid or isGM:
-        result = db.insertAbility(codex, author.server.id, isGM)
+        result = db.insertAbility(author.server.id, codex, isGM)
         if result:
             return result
         return "You need Manage Messages or Administrator permission to modify characters during a battle!"
@@ -703,7 +700,7 @@ def editAbility(codex, author):
     char = db.getCharacter(author.server.id, codex[0].lower())
     isGM = author.server_permissions.administrator or author.server_permissions.manage_messages
     if author.id == char.userid or isGM:
-        result = db.updateAbility(author.server.id,codex,isGM)
+        result = db.updateAbility(author.server.id, codex, isGM)
         if result:
             return result
         return "You need Manage Messages or Administrator permission to modify characters during a battle!"

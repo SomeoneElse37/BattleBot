@@ -1,6 +1,9 @@
-_CURRENT_DB_VERSION = 17
 from classes.battles import Battle
+from classes.abilities import Ability
+
 #This file contains everything to interact with the pickle version of the database
+
+_CURRENT_DB_VERSION = 17
 
 def _updateDBFormat(database):
     if 'version' not in database or database['version'] < _CURRENT_DB_VERSION:
@@ -44,9 +47,9 @@ class Database:
         print('Database saved to disk.')
 
     def getBattle(self, serverId):
-        print(type(self.db))
-        print(str(serverId))
-        print(repr(serverId))
+        # print(type(self.db))
+        # print(str(serverId))
+        # print(repr(serverId))
         return self.db[serverId]
 
     def createGuild(self, guild):
@@ -105,7 +108,7 @@ class Database:
 
     def insertAbility(self, serverId, codex, overwriteBattleLock=False):
         battle = self.getBattle(serverId)
-        char  = self.getCharacter(codex[0].lower())
+        char = self.getCharacter(serverId, codex[0].lower())
         if char not in battle.participants or overwriteBattleLock:
             try:
                 abl = char.abilities[codex[1].lower()]
@@ -118,8 +121,8 @@ class Database:
         return False
 
     def updateAbility(self, serverId, codex, overwriteBattleLock=False):
-        char = self.getCharacter(codex[0].lower())
         battle = self.getBattle(serverId)
+        char = self.getCharacter(serverId, codex[0].lower())
         if char not in battle.participants or overwriteBattleLock:
             abl = char.abilities[codex[1].lower()]
             abl.setStep(codex[2:])
@@ -131,7 +134,7 @@ class Database:
         return char.listAbilities()
 
     def deleteChar(self, battleId, charName):
-        battle= self.getBattle(battleId)
+        battle = self.getBattle(battleId)
         battle.deleteChar(charName)
 
     def guildExists(self, guild):

@@ -40,12 +40,15 @@ class Ability:
     def parseStep(self, codex):
         out = []
         codex = [s.lower() for s in codex]
-        try:
+        if ':' in codex:
             i = codex.index(':')
             theRest = codex[(i+1):]
             codex = codex[:i]
-        except ValueError:
+        else:
             theRest = None
+
+        # print('Codex: ' + str(codex))
+        # print('The Rest: ' + str(theRest))
 
         if codex[0] == 'calc':
             out = codex[:2]
@@ -87,7 +90,7 @@ class Ability:
         else:
             raise ValueError('Invalid /editability command: {}'.format(codex[0]))
 
-        if theRest is None:
+        if theRest is not None:
             out.append(theRest)
         else:
             out.append(codex)
@@ -238,12 +241,14 @@ class Ability:
         if len(self.flavor) > 0:
             out += '\n  ' + self.flavor
         for i, step in enumerate(self.steps):
+            # print(str(step))
             out += '\n {:3d}: '.format(i + 1)
             # out += str(step)
             rpn = step[-1]
             step = step[:-1]
             step.append(':')
-            step.extend(rpn)
+            if rpn is not None:
+                step.extend(rpn)
             for cmd in step:
                 out += cmd + ' '
         return out
