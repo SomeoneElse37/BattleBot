@@ -94,7 +94,7 @@ def generateODSFromCharacters(characters,grid=False,path=False):
                 insert=characters[char].statPoints[atribute]
             else:
                 insert=0
-            
+
             if insert == 0:
                 #if insert ==0 it will become "" in the excelsheet. This prevents that from happening
                 insert="0"

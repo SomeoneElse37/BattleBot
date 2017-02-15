@@ -1,6 +1,6 @@
 # discord.py
 # Base code by Eruantien
-# ANWA-apecific code by Someone Else 37
+# ANWA-apecific code by Someone Else 37 and lenscas
 
 #import asyncio
 import discord

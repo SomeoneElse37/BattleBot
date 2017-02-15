@@ -1,5 +1,8 @@
 from random import uniform
 
+from calc.vector import *
+from calc.rpn import *
+
 class Ability:
     """Represents an Ability that a character may call upon at any time. On their turn, at least."""
 

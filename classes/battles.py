@@ -1,3 +1,6 @@
+from calc.dice import *
+from calc.path import *
+
 def clampPosWithinField(pos, fieldSize):
     x, y = pos
     if x < 0:

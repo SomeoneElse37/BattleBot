@@ -1,80 +1,8 @@
 import math
 from random import randint, gauss, shuffle
 
-def prettyDamage(atk, dfn, secrets=(False, False)):
-    s1, r1 = prettyRoll(atk, secrets[0])
-    s2, r2 = prettyRoll(dfn, secrets[1])
-    dmgstr, dmg = damageString(r1, r2)
-    return s1 + '\n' + s2 + '\n' + dmgstr, dmg
-
-def damageString(r1, r2):
-    ratio = r1 / r2
-    dmg = max(math.ceil(ratio - 1), 0)
-    out = "{:d}%: ".format(int(ratio * 100))
-    if dmg == 0:
-        return out + "The attack was blocked.", 0
-    else:
-        return out + "The attacker dealt " + str(dmg) + " damage.", dmg
-
-def d10(times, sides):
-    dice_list = []
-    for foo in range(0, times):
-        bar = randint(1, sides)
-        dice_list += [bar]
-    return(dice_list)
-
-def prettyRoll(n, secret=False):
-    if not secret:
-        if n <= 100:
-            rolls = d10(n, 10)
-            return formatRoll(rolls), sum(rolls)
-        else:
-            roll = statisticD10Sum(n)
-            return '{:d} = [... x{:d} ...]'.format(roll, n), roll
-    else:
-        roll = 0                    # The Central Limit Theorem really kicks in with a sample size >= 30,
-        if n <= 30:                 # if the underlying distribution is not heavily skewed.
-            roll = sum(d10(n, 10))  # Hence why I use 30 here.
-        else:
-            roll = statisticD10Sum(n)
-        return '{:d} = [...]'.format(roll), roll
-
-accCheckFlavors = [
-        'The attack missed by a mile.',
-        'Failure. The attack missed.',
-        'Success! The attack connects.',
-        'Critical hit? Maybe?'
-        ]
-
-
-aglCheckFlavors = [
-        'No. Not even close.',
-        "Couldn't quite escape melee range.",
-        'Just made it out of melee range.',
-        'Easily escaped melee range.'
-        ]
-
-def checkString(r1, r2, flavors=accCheckFlavors):
-    diff = r1 - r2
-    if diff < -20:
-        return flavors[0]
-    elif diff <= 0:
-        return flavors[1]
-    elif diff <= 20:
-        return flavors[2]
-    else:
-        return flavors[3]
-
-def formatRoll(rolls):
-    return(str(sum(rolls)) + ' = ' + str(rolls))
-
-def prettyCheck(acc, eva, secrets=(False, False), flavors=accCheckFlavors):
-    s1, r1 = prettyRoll(acc, secrets[0])
-    s2, r2 = prettyRoll(eva, secrets[1])
-    return s1 + '\n' + s2 + '\n' + checkString(r1, r2, flavors=flavors), r1 > r2
-
-def distance(pos1, pos2):
-    return math.hypot(pos1[0] - pos2[0], pos1[1] - pos2[1])
+from calc.dice import *
+from calc.vector import *
 
 def makeStatDict(hp, acc, eva, atk, dfn, spd):
         return dict(HP=hp, ACC=acc, EVA=eva, ATK=atk, DEF=dfn, SPD=spd)
