@@ -1,7 +1,21 @@
+from operator import itemgetter, attrgetter, methodcaller
 from random import uniform, shuffle
 
 from calc.vector import *
 from calc.rpn import *
+
+def _pickAndRemove(candidates, n, weight):
+    w = weight
+    i = len(candidates) - 1
+    if i < 0:
+        return None
+    while w > n and i >= 0:
+        w -= candidates[i][0]
+        i -= 1
+    i += 1
+    out = candidates[i]
+    del candidates[i]
+    return out
 
 class Ability:
     """Represents an Ability that a character may call upon at any time. On their turn, at least."""
@@ -162,17 +176,22 @@ class Ability:
 
     def calcWeights(self, user, candidates):
         weights = []
+        # print('Candidates: {!s}'.format(candidates))
         for target in candidates:
+            # print('Calculating weight for ' + target.name)
             data = dict(self=user, target=target, secrets=(user.secret, target.secret))
             for step in self.steps:
                 if step[0] == 'calc':
                     result, flavor = parseRPN(step[-1], data=data, functions=auxFunctions)
                     data[step[1]] = result
-                weights.append(data['weight'], target)
-        return list(filter((lambda w, x: w > 0), weights.sort()))
+            weights.append((data['weight'], target))
+        # print(str(weights))
+        filtered = list(filter((lambda p: p[0] > 0), weights))
+        # print(str(filtered))
+        return sorted(filtered, key=itemgetter(0))
 
-    def canHit(self, user, locus, char):
-        if char.distanceTo(locus) > self.limit:
+    def canHit(self, user, locus, char, radius):
+        if char.distanceTo(locus) > radius:
             return False
         if ((char.isDead()) != ('corpse' in self.targets)):
             return False
@@ -182,47 +201,39 @@ class Ability:
             return False
         return True
 
-    def getAllTargetsInRange(self, user, participants, locus):
-        targets = [char for char in participants if self.canHit(user, locus, char)]
-        shuffle(targets)
+    def getAllTargetsInRange(self, user, participants, locus, radius):
+        # targets = []
+        # for char in participants:
+        targets = [char for char in participants if self.canHit(user, locus, char, radius)]
         return targets
-
-    def pickAndRemove(candidates, n, weight):
-        w = weight
-        i = len(candidates) - 1
-        if i < 0:
-            return None
-        while w > n and i >= 0:
-            w -= candidates[i][0]
-            i -= 1
-        i += 1
-        out = candidates[i]
-        del candidates[i]
-        return out
 
     def execute(self, user, participants, targets=None, locus=None):
         if self.timeout > 0:
             raise ValueError('This ability is on cooldown for {:d} more turns.'.format(self.timeout))
         log = ''
         if 'random' in self.targets:
-            candidates = self.getAllTargetsInRange(user, participants, user.pos)
+            # print('Executing randomly-targeted ability.')
+            candidates = self.getAllTargetsInRange(user, participants, user.pos, self.range)
+            # print('Candidate targets in range: {!s}'.format(candidates))
+            candidates = self.calcWeights(user, candidates)
+            # print('Weights: {!s}\n'.format(candidates))
+            log += 'Weights: {!s}\n'.format(candidates)
             if self.limit < len(candidates):
-                candidates = self.calcWeights(user, candidates)
-                log += 'Weights: {!s}\n'.format(candidates)
                 totalWeight = 0
                 for weight, char in candidates:
                     totalWeight += weight
-                targets = set()
+                targets = []
                 for i in range(self.limit):
-                    w, nextTarget = pickAndRemove(candidates, uniform(0, weight), weight)
+                    w, nextTarget = _pickAndRemove(candidates, uniform(0, weight), weight)
                     totalWeight -= w
-                    targets.add(nextTarget)
-                log += 'Targets: {!s}\n'.format(targets)
+                    targets.append(nextTarget)
             else:
-                targets = set(candidates)
+                targets = list(map(itemgetter(1), candidates))
+            log += 'Targets: {!s}\n'.format(targets)
         elif locus is not None:
             if user.distanceTo(locus) <= self.range:
-                targets = self.getAllTargetsInRange(user, participants, locus)
+                targets = self.getAllTargetsInRange(user, participants, locus, self.limit)
+                shuffle(targets)
             else:
                 raise ValueError('That location is {:d} tiles away from you. This ability has a range of {:d}.'.format(user.distanceTo(locus), self.range))
         else:
