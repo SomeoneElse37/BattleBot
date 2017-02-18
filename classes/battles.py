@@ -1,3 +1,5 @@
+from random import choice
+
 from calc.dice import *
 from calc.vector import *
 from calc.path import *
@@ -249,7 +251,9 @@ class Battle:
         out = ''
         prevDeadChars = {ch for ch in self.participants if ch.isDead()}
         try:
-            if 'random' in ability.targets:
+            if 'reaction' in ability.targets:
+                raise ValueError("This is a reaction. You can't just activate it anytime.")
+            elif 'random' in ability.targets:
                 out += ability.execute(user, self.participants)
             elif 'location' in ability.targets:
                 path, maxDist, stop = self.parseDirectionList(user.pos, codex)
@@ -257,13 +261,19 @@ class Battle:
                 out += ability.execute(user, self.participants, locus=locus)
             else:
                 if len(codex) == 0:     # No targets given
+                    if 'ability' in ability.targets or 'modifier' in ability.targets:
+                        raise ValueError('No targets given for a modifier- or ability-targeting ability.')
                     if 'self' not in ability.targets:
                         raise ValueError('No targets given for an ability that cannot target its user.')
                     out = ability.execute(user, self.participants, targets=[user])
                 else:
                     targets = []
-                    for name in codex:
+                    items = []
+                    i = 0
+                    while i < len(codex):
+                        name = codex[i]
                         char = self.characters[name.lower()]
+                        i += 1
                         if char is user:
                             if 'self' not in ability.targets:
                                 raise ValueError('You cannot target yourself with this ability.')
@@ -271,6 +281,12 @@ class Battle:
                             if 'ally' not in ability.targets and 'enemy' not in ability.targets:     # BattleBot has no way to know who is an ally and who is an enemy (yet)
                                 raise ValueError('You cannot target {} with this ability.'.format(char.name))
                         targets.append(char)
+                        if 'ability' in ability.targets:
+                            if codex[i].lower() in char.abilities:
+                                items.append(char.abilities[codex[i].lower()])
+                                i += 1
+                            else:
+                                items.append(choice(char.abilities))
                     out = ability.execute(user, self.participants, targets=targets)
             for char in self.participants:
                 if char.isDead() and char not in prevDeadChars:

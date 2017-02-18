@@ -44,6 +44,10 @@ class Ability:
         if 'aoe' in self.targets:
             self.targets.remove('aoe')
             self.targets.add('location')
+        if 'location' in self.targets and not self.targets.isDisjoint({'ability', 'modifier'}):
+            raise ValueError('AoE abilities cannot target abilities or modifiers (yet). Until I figure out a good way to handle that. Any ideas?')
+        if self.targets.isDisjoint({'self', 'ally', 'enemy'}):
+            self.targets.update({'self', 'ally', 'enemy'})
 
     def __init__(self, codex):
         self.name = codex[0]
@@ -67,10 +71,8 @@ class Ability:
             codex = codex[:i]
         else:
             theRest = None
-
         # print('Codex: ' + str(codex))
         # print('The Rest: ' + str(theRest))
-
         if codex[0] == 'calc':
             out = codex[:2]
             codex = codex[2:]
@@ -97,11 +99,11 @@ class Ability:
         elif codex[0] == 'effect':
             out = [codex[0]]
             codex = codex[1:]
-            if len(codex) > 0 and codex[0] in {'extend', 'cancel', 'steal', 'redirect'}:
+            if len(codex) > 0 and codex[0] in {'redirect'}:
                 out.append(codex[0])
                 codex = codex[1:]
             else:
-                if len(codex) > 0 and codex[0] in {'damage', 'apply'}:
+                if len(codex) > 0 and codex[0] in {'damage', 'apply', 'copy', 'cancel', 'extend'}:
                     out.append(codex[0])
                     codex = codex[1:]
                 else:
@@ -152,7 +154,7 @@ class Ability:
             self.steps.append(self.parseStep(codex))
 
     # Step format: ("calc" var | "condition" cond | "effect" ("damage" | "apply") ("self" | "target")) \[ RPN commands ... \]
-    def executeInner(self, user, target, locus=None):
+    def executeInner(self, user, target, locus=None, item=None):
         data = dict(self=user, target=target, secrets=(user.secret, target.secret))
         log = 'Targeting {}:'.format(target.name)
         if locus is not None:
@@ -218,7 +220,7 @@ class Ability:
         targets = [char for char in participants if self.canHit(user, locus, char, radius)]
         return targets
 
-    def execute(self, user, participants, targets=None, locus=None):
+    def execute(self, user, participants, targets=None, locus=None, items=None):
         if self.timeout > 0:
             raise ValueError('This ability is on cooldown for {:d} more turns.'.format(self.timeout))
         log = ''
