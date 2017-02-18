@@ -12,7 +12,9 @@ For more info on how to use BattleBot, type /help contents
 Want to add BattleBot to your server? Type /invite
 \*Note, this may not actually give you a functional invite link. I'm not sure why.
 
-Want to host BattleBot yourself, look at the sourcecode, or file a bug report? Type /github""",
+Want to host BattleBot yourself, look at the sourcecode, or file a bug report? Type /github
+
+**Note: Many of these help pages are quite long. Please do not use them outside of your server's designated spam channel, or the GM (and the other players) will be very annoyed with you.**""",
         'contents': """Table of Contents
 
 /help bot: General bot information
@@ -25,15 +27,16 @@ Want to host BattleBot yourself, look at the sourcecode, or file a bug report? T
 /help stats: How stats work in BattleBot
 /help modifier: How stat modifiers (i.e. buffs and debuffs) work
 /help ability: Deailed information on abilities and how to create them
-/help ability2: The /editability command
-/help ability3: An exaple ability
+/help ability2: Ability Parameters
+/help ability3: The /editability command
+/help ability4: A Shocking Example
 /help rpn: Crash course on Reverse Polish Notation
 /help rpn2: Details on BattleBot's take on RPN
 /help rpn3: RPN operators only useful in abilities
 /help gm: Commands for GMs
 /help calc: Commands that roll dice and calculate stuff. Mostly obsoleted by all the above.
 
-**Do Note:** Many of these help pages are quite long. Please do not use them outside of your server's designated spam channel, or the GM (and the other players) will be very annoyed with you.""",
+**Note: Many of these help pages are quite long. Please do not use them outside of your server's designated spam channel, or the GM (and the other players) will be very annoyed with you.**""",
         'player': """Player Commands
 These commands are usable by all players, and do not typically have any impact on the state of the battle.
 
@@ -181,21 +184,33 @@ BattleBot's ability system uses four commands.
         Cooldown 1 means that you will not be able to use the ability again for one turn after using it
                 (so you can use it every other turn).
         Cooldown 0 is no cooldown.
-    targetTypes: A list of any combination of the following words, separated by spaces.
-        location: This is an AoE ability, to be aimed at a location on the grid.
-        aoe: Alias for location.
-        self: Ability can target the user.
-        ally: Ability can target the user's teammates.
-        enemy: Ability can target the user's opponents.
-            Note: As BattleBot does not handle teams (yet), ally and enemy are synonymous.
-        corpse: Ability can ONLY target characters on the battlefield that are dead.
+    parameters: A description of what kinds of things the ability is able to target. See /help ability2.
     limit: For AoE abilities, the radius of the affected area. For targeted abilities, the maximum number of targets.
             Deaults to 1.
-/editability: See /help ability2""",
-        'ability2': """The /editability Command
+/editability: See /help ability3""",
+        'ability2': """Ability Parameters
 
-/editability name abilityName [n] action rpn ...: Edits the sequence of steps that the ability performs for each target.
-    n: If given, replace line n rather than appending step n to the end of the list.
+This argument to /makeability consists of a list of any number of the following words, separated by spaces. There are very few restrictions on which ones or how many can be used together: want your ability to target a random modifier or ability on a random allied corpse? Sure!
+
+location: This is an AoE ability, to be aimed at a location on the grid.
+aoe: Alias for location.
+self: Can target the user.
+ally: Can target the user's teammates.
+enemy: Can target the user's opponents.
+    Note: As BattleBot does not handle teams (yet), ally and enemy are synonymous.
+corpse: Can target characters that are dead, but not those that are living.
+ability: Can target other abilities, but not characters. Incompatible with location/AoE.
+modifier: Can target modifiers, but not characters. Incompatible with location/AoE.
+random: Chooses its targets at random from all characters in range, without requiring ANY input from the user.
+    If the ability computes a variable called 'weight' (see 'calc var' in /help ability3), that number is used
+    to weight the random number generator. Larger weights are more likely to be chosen.
+reaction: This ability triggers in response to the user being targeted with another ability. Cannot be activated directly
+    using /ability. May be used to redirect the ability to its source or to one or more other characters. Implies 'random'
+    and uses this ability's range, limit, and parameters to choose the new targets (if the ability is actually redirected).""",
+        'ability3': """The /editability Command
+
+/editability name abilityName [N] action [:] rpn ...: Edits the sequence of steps that the ability performs for each target.
+    N: If given, replace line n rather than appending step n to the end of the list.
     action: What this step of the ability is supposed to do. Can take any one of the following formats:
         calc var: Executes the RPN expression, and stores its result in a variable called var for use in later steps.
             If the ability already has a step to calculate var, replace that step.
@@ -207,17 +222,18 @@ BattleBot's ability system uses four commands.
             damage: Deal damage to a character. Does not roll dice, so use one of the roll commands in /help rpn2.
             apply: Apply a modifier to a character. The RPN expression must return a modifier: see /help rpn3.
                 Defaults to apply if neither are given.
-            self: The effect applies to the user of the ability, regardless of tho the target may be.
-                    Usually superfluous, since you can target yourself.
+            self: The effect applies to the user of the ability, regardless of who the target may be.
+                    Useful for recoil damage.
             target: The effect applies to the target.
                 Defaults to target if neither are given.
         flavor: Set the ability's flavor text.
-        delete n: Delete step n from the ability.
+        N delete | delete N: Delete step N from the ability.
+    :  The colon is optional. If specified, it separates the action from the RPN string unambiguously.
     rpn: The last parameter to /editability must be an RPN expression. It is executed whenever the ability is used,
             and its return value determines what will happen. See /rpn for details.
 
-Type /help ability3 for an example.""",
-        'ability3': """A Shocking Example
+Type /help ability4 for an example.""",
+        'ability4': """A Shocking Example
 
 Say you've got a character named "Zeus", and you want him to be able to summon lightning. You could type the following commands in this order:
 
@@ -356,4 +372,9 @@ These just roll dice and calculate stuff. They have no effect on the battle at a
     Returns a histogram. Each row is a bucket of bucketSize, collecting all rolls from one algorithm within its range.
     The even-numbered rows correspond to the count-and-add algorithm; the odd ones to the new statistical algorithm.
 /calc rpn ...: Invoke BattleBot's RPN parser. Type /help rpn for more info."""}
+
+for k, v in help_dict.items():
+    if len(v) > 2000:
+        print('Warning: /help {:s} is {:d} characters long! Max message length is 2000!'.format(k, len(v)))
+
 

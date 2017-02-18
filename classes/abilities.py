@@ -5,6 +5,9 @@ from calc.vector import *
 from calc.rpn import *
 
 def _pickAndRemove(candidates, n, weight):
+    # print('Candidates: {!s}'.format(candidates))
+    # print('Total Weight: {}'.format(weight))
+    # print('Random Number: {}'.format(n))
     w = weight
     i = len(candidates) - 1
     if i < 0:
@@ -14,6 +17,7 @@ def _pickAndRemove(candidates, n, weight):
         i -= 1
     i += 1
     out = candidates[i]
+    # print('Chose {!r}'.format(out))
     del candidates[i]
     return out
 
@@ -130,6 +134,9 @@ class Ability:
             return
         try:
             i = int(codex[0]) - 1
+            if codex[1] == 'delete':
+                del self.steps[i]
+                return
             self.steps[i] = self.parseStep(codex[1:])
         except ValueError:
             name = ''
@@ -184,7 +191,11 @@ class Ability:
                 if step[0] == 'calc':
                     result, flavor = parseRPN(step[-1], data=data, functions=auxFunctions)
                     data[step[1]] = result
-            weights.append((data['weight'], target))
+            if 'weight' in data:
+                w = data['weight']
+            else:
+                w = 1
+            weights.append((w, target))
         # print(str(weights))
         filtered = list(filter((lambda p: p[0] > 0), weights))
         # print(str(filtered))
@@ -222,9 +233,10 @@ class Ability:
                 totalWeight = 0
                 for weight, char in candidates:
                     totalWeight += weight
+                    # print('weight + {} = {}'.format(weight, totalWeight))
                 targets = []
                 for i in range(self.limit):
-                    w, nextTarget = _pickAndRemove(candidates, uniform(0, weight), weight)
+                    w, nextTarget = _pickAndRemove(candidates, uniform(0, totalWeight), totalWeight)
                     totalWeight -= w
                     targets.append(nextTarget)
             else:
