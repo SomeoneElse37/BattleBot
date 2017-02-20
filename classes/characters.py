@@ -76,7 +76,7 @@ class Character:
         self.health = self.hp()
         self.pos = (0, 0)       # X and Y coordinates
         self.secret = secret    # If true, this character's stats will not be reported to players (used for some NPCs)
-        self.ephemeral = false  # If true, this character will vanish on death, removing themself from the battle and revoking all their modifiers. Intended for minions.
+        self.ephemeral = False  # If true, this character will vanish on death, removing themself from the battle and revoking all their modifiers. Intended for minions.
 
     def isDead(self):
         return self.health <= 0
