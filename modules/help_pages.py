@@ -52,6 +52,8 @@ These commands are usable by all players, and do not typically have any impact o
 /list name: Show all the info about the named character.
 /modifiers name: Show all modifiers on the named character.
 /abilities name: Show all of the abilities the named character has.
+/send name serverName|serverID [newName]: Send a clone of the named character to the specified server, optionally with a new name (to prevent naming conflicts).
+    The copy will be owned and controlled by you, not necessarily its original owner.
 /invite: Show BattleBot's invite link.
 /github: Show the link to this bot's sourcecode on GitHub.""",
         'battle': """Battle Commands
