@@ -50,10 +50,26 @@ class Ability:
             self.targets.update({'self', 'ally', 'enemy'})
 
     def __init__(self, codex):
-        self.name = codex[0]
-        self.setFields(codex[1:])
+        if codex is not None:
+            self.name = codex[0]
+            self.setFields(codex[1:])
         self.steps = []
         self.flavor = ''
+
+    # Creates a deep copy of the Ability object.
+    # NOTE: When adding new attributes to an Ability, BE SURE to add them here!
+    def copy(self):
+        new = Ability(None)
+        for attrib in ['name', 'range', 'cooldown', 'timeout', 'limit', 'flavor']:
+            setattr(new, attrib, getattr(self, attrib))
+        for attrib in ['targets']:
+            setattr(new, attrib, getattr(self, attrib).copy())
+        new.steps = []
+        for step in self.steps:
+            nstep = step[:-1].append(nstep[-1][:])
+            new.steps.append(nstep)
+        return new
+
 
     # Each element in steps is a list of strings. The first is always 'calc', 'condition', or 'effect'.
     # The second varies.
