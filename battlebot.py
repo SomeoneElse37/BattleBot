@@ -496,6 +496,47 @@ def restat(codex, author):
     else:
         return "You need Manage Messages or Administrator permission to restat other players' characters!"
 
+# Will be set to discord.Client() later on; sendToServer needs to know of this right now (but will not be called until later)
+client = None;
+
+# Creates a copy of the named Character and sends it to an entirely different server, specified either by ID or by name
+def sendToServer(codex, author):
+    targetBattle = None
+    try:
+        targetBattle = db.getBattle(codex[1])   # May need to be int(codex[1])
+    except KeyError:
+        for guild in client.servers:
+            if guild.name == codex[1]:
+                try:
+                    targetBattle = db.getBattle(guild.id)
+                except KeyError:
+                    db.createGuild(guild)
+                    targetBattle = db.getBattle(guild.id)
+                break
+            elif guild.id == codex[1]:      # May also need to be int(codex[1])
+                db.createGuild(guild)       # If we're here, the user named a guild ID known to BattleBot that does not already have
+                targetBattle = db.getBattle(guild.id)   # an associated Battle object. So create one.
+                break
+    if targetBattle is None:
+        return 'Server {!s} not found. Known servers:\n{}'.format(codex[1], db.listBattles())
+    char = db.getCharacter(author.server.id, codex[0].lower())
+    new = char.copy()
+    new.mention = author.mention
+    new.username = author.display_name
+    new.userid = author.id
+    if len(codex) >= 3:
+        new.name = codex[2]
+    try:
+        targetBattle.addCharacter(new)
+    except ValueError as e:
+        if e.args[0].startswith('There is already '):
+            log = 'There is already a character on {0} named {1}.\nTry deleting {1} from {0} first, '.format(targetBattle.name, char.name)
+            log += 'or giving /send a new name for the character as its third argument.'
+            raise ValueError(log)
+        else:
+            raise
+    return '{} successfully copied to {}.'.format(new.name, targetBattle.name)
+
 # Formatted like +10% STR 5
 def parseModifier(codex):
     dur = codex[2]
@@ -692,6 +733,8 @@ def getReply(content, message):
             return clearBattle(codex[1:], message.author)
         elif codex[0] == 'delete':
             return deleteChar(codex[1:], message.author)
+        elif codex[0] == 'send':
+            return sendToServer(codex[1:], message.author)
         elif codex[0] == 'addModifier':
             return addModifier(codex[1:], message.author)
         elif codex[0] == 'warp':

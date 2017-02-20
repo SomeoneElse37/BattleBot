@@ -99,6 +99,9 @@ class Battle:
             out += '\n\nThere is no active battle.'
         return out
 
+    def __repr__(self):
+        return '{} ({})'.format(self.name, self.id)
+
     def delete(self, name):
         char = self.characters[name.lower()]
         char.clearModifiers()

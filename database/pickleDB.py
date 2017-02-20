@@ -177,3 +177,9 @@ class Database:
         char = self.getCharacter(serverId, charName)
         return char.listModifiers()
 
+    def listBattles(self):
+        return str(self.db.values())
+
+
+
+
