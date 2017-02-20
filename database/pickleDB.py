@@ -135,7 +135,7 @@ class Database:
 
     def deleteChar(self, battleId, charName):
         battle = self.getBattle(battleId)
-        battle.deleteChar(charName)
+        battle.delete(charName)
 
     def guildExists(self, guild):
         return guild.id in self.db
@@ -176,10 +176,6 @@ class Database:
     def getModifiers(self, serverId, charName):
         char = self.getCharacter(serverId, charName)
         return char.listModifiers()
-
-    def listBattles(self):
-        return str(self.db.values())
-
 
 
 

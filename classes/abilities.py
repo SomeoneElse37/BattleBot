@@ -44,9 +44,9 @@ class Ability:
         if 'aoe' in self.targets:
             self.targets.remove('aoe')
             self.targets.add('location')
-        if 'location' in self.targets and not self.targets.isDisjoint({'ability', 'modifier'}):
+        if 'location' in self.targets and not self.targets.isdisjoint({'ability', 'modifier'}):
             raise ValueError('AoE abilities cannot target abilities or modifiers (yet). Until I figure out a good way to handle that. Any ideas?')
-        if self.targets.isDisjoint({'self', 'ally', 'enemy'}):
+        if self.targets.isdisjoint({'self', 'ally', 'enemy'}):
             self.targets.update({'self', 'ally', 'enemy'})
 
     def __init__(self, codex):
@@ -66,7 +66,8 @@ class Ability:
             setattr(new, attrib, getattr(self, attrib).copy())
         new.steps = []
         for step in self.steps:
-            nstep = step[:-1].append(nstep[-1][:])
+            nstep = step[:-1]
+            nstep.append(step[-1][:])
             new.steps.append(nstep)
         return new
 

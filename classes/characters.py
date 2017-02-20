@@ -82,10 +82,10 @@ class Character:
     # Constructs a deep copy of this Character and all its attributes, except the modifiers.
     # NOTE: When adding attributes to Character, BE SURE to add them here as well!
     def copy(self):
-        new = Character(None, self.name, self.race, self.statpoints.copy(), self.secret)
+        new = Character(None, self.name, self.race, self.statPoints.copy(), self.secret)
         for attrib in ['mention', 'username', 'userid', 'health', 'pos', 'ephemeral']:
             setattr(new, attrib, getattr(self, attrib))
-        for k, v in self.abilities:
+        for k, v in self.abilities.items():
             new.abilities[k] = v.copy()
         return new
 
