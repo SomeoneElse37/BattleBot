@@ -25,8 +25,13 @@ class Battle:
             raise ValueError("There is already a character named " + char.name + "!")
 
     def clear(self):
+        remove=[]
         for k, v in self.characters.items():
             v.respawn()
+            v.minionCount=0
+            if v.isMinion:
+                remove.append(k)
+        for k in remove: del self.characters[k]
         self.participants = []
         self.turn = -1
 

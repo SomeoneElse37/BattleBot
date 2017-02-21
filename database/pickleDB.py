@@ -177,7 +177,8 @@ class Database:
         return charName + ' has successfully joined the battle!'
     def minionByChar(self,charName,battleId,forcedPassTurn):
         character = self.getCharacter(battleId,charName)
-        minion = character.minionFy(forcedPassTurn)
+        battle = self.getBattle(battleId)
+        minion = character.minionFy(battle,forcedPassTurn)
         return minion
     def getModifiers(self, serverId, charName):
         char = self.getCharacter(serverId, charName)

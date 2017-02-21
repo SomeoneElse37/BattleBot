@@ -85,29 +85,32 @@ class Character:
 
     # Constructs a deep copy of this Character and all its attributes, except the modifiers.
     # NOTE: When adding attributes to Character, BE SURE to add them here as well!
-    def copy(self):
-        new = Character(None, self.name, self.race, self.statPoints.copy(), self.secret)
+    def copy(self,newName=False,isMinion=False,forcedPassTurn=False):
+        if(not newName):
+            newName=self.name
+        
+        new = Character(None, newName, self.race, self.statPoints.copy(), self.secret)
         for attrib in ['mention', 'username', 'userid', 'health', 'pos', 'ephemeral']:
             setattr(new, attrib, getattr(self, attrib))
         for k, v in self.abilities.items():
             new.abilities[k] = v.copy()
+        new.isMinion=isMinion
+        new.forceTurnSkip=forcedPassTurn
         return new
 
     def isDead(self):
         return self.health <= 0
     #this function can later be used to make a minion out of a character
     def generateKeyForMinion(self):
-        self.minionCount+1
-        return self.name +"#" +self.minionCount
-    def minionFy(self,forcedPassTurn=False):
+        self.minionCount=self.minionCount+1
+        return self.name +"#" +str(self.minionCount)
+    
+    def minionFy(self,toBattle,forcedPassTurn=False):
         newName = self.generateKeyForMinion()
         #clone it
-        #newMinion=self.clone
-        #give it the new name
-        #newMinion.name=newName
-        #make it forcebly skip its turns if needed
-        #newMinion.focredTurnSkip=forcedPassTurn
-        #put it on the battlefield?
+        newMinion=self.copy(newName,True,forcedPassTurn)
+        toBattle.addCharacter(newMinion)
+        toBattle.addParticipant(newName)
         return newName #return the minion or something? I guess?
     
     # # (stat, factor, duration, isMult)

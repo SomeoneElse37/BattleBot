@@ -58,10 +58,11 @@ def toggleTurnSkip(codex,author):
     return str(db.toggleTurnSkip(author.server.id,codex[0]))
 def makeMinion(codex,author):
     forceTurnSkip=False
+    print(len(codex))
     if len(codex)==2:
         forceTurnSkip = bool(codex[1])
-    
-    return db.minionByChar(author.server.id,codex[0],forceTurnSkip)
+    print(forceTurnSkip)
+    return db.minionByChar(codex[0],author.server.id,forceTurnSkip)
 ##############################################
 # Code for the various random calc functions #
 ##############################################
