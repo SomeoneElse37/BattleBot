@@ -3,7 +3,7 @@ from classes.abilities import Ability
 
 #This file contains everything to interact with the pickle version of the database
 
-_CURRENT_DB_VERSION = 17
+_CURRENT_DB_VERSION = 18
 
 def _updateDBFormat(database):
     if 'version' not in database or database['version'] < _CURRENT_DB_VERSION:
@@ -23,7 +23,10 @@ def _updateDBFormat(database):
                     # Character attributes: username, userid, name, race, size, statPoints, baseStats, abilities, modifiers, health, location, secret
                     if not hasattr(w, 'ephemeral'):
                         w.ephemeral = False
-
+                    if not hasattr(w,"isMinion"):
+                        w.isMinion=True
+                        w.minionCount=0 #this tracks how often a minion has been made using this character as its base
+                        w.forceTurnSkip=False
                     # for m, x in w.abilities.items():
                         # Ability attributes: name, range, cooldown, timeout, targets, limit, steps, flavor
         database['version'] = _CURRENT_DB_VERSION
@@ -172,8 +175,14 @@ class Database:
         battle = self.getBattle(battleId)
         battle.addParticipant(charName)
         return charName + ' has successfully joined the battle!'
-
+    def minionByChar(self,charName,battleId,forcedPassTurn):
+        character = self.getCharacter(battleId,charName)
+        minion = character.minionFy(forcedPassTurn)
+        return minion
     def getModifiers(self, serverId, charName):
         char = self.getCharacter(serverId, charName)
         return char.listModifiers()
-
+    def toggleTurnSkip(self,charName,serverId):
+        char = self.getCharacter(charName,serverId)
+        char.forceTurnSkip = not char.forceTurnSkip
+        return char.forceTurnSkip

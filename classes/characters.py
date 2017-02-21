@@ -51,6 +51,7 @@ class Character:
                         m.revoke()
         self.modifiers = dict(HP=([], []), ACC=([], []), EVA=([], []), ATK=([], []), DEF=([], []), SPD=([], []))
 
+
     # Attributes: username, userid, name, race, size, statPoints, baseStats, abilities, modifiers, health, location, secret
     def __init__(self, owner, name, race, statpoints, secret=False):
         if not race in Character.sizeTiers:
@@ -63,6 +64,9 @@ class Character:
         self.size = Character.sizeTiers[self.race]
         self.statPoints = statpoints
         self.baseStats = Character.baseStats[self.race]
+        self.isMinion=False #this is used to let the bot know if a character is a minion
+        self.minionCount=0 #this tracks how often a minion has been made using this character as its base
+        self.forceTurnSkip=False #this can be used to forcefully skip characters
         # Modifiers are stored in this dictionary.
         # The keys are the same as in all the various stat dictionaries. HP, ACC, EVA, etc.
         # Each value is a pair of lists. The first element in each pair is a list of multiplicative modifiers (e.g. 120% STR for 2 turns);
@@ -80,7 +84,21 @@ class Character:
 
     def isDead(self):
         return self.health <= 0
-
+    #this function can later be used to make a minion out of a character
+    def generateKeyForMinion(self):
+        self.minionCount+1
+        return self.name +"#" +self.minionCount
+    def minionFy(self,forcedPassTurn=False):
+        newName = self.generateKeyForMinion()
+        #clone it
+        #newMinion=self.clone
+        #give it the new name
+        #newMinion.name=newName
+        #make it forcebly skip its turns if needed
+        #newMinion.focredTurnSkip=forcedPassTurn
+        #put it on the battlefield?
+        return newName #return the minion or something? I guess?
+    
     # # (stat, factor, duration, isMult)
     # def createModifier(self, theTuple):
     #     stat, factor, duration, isMult = theTuple

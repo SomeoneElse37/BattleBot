@@ -125,7 +125,8 @@ class Battle:
             # print(self.turn)
             # print(self.currentChar())
             try:
-                if not self.currentChar().isDead():
+                currentChar = self.currentChar()
+                if not currentChar.isDead() and not currentChar.forceTurnSkip:
                     break
             except AttributeError:
                 break

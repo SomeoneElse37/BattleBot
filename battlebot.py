@@ -54,6 +54,14 @@ def createExcel(characterList):
         #    await client.send_file(channel, f)
         return {'error':False,'file':pathToExcel,'message':"",'deleteAfterUpload':True}
 
+def toggleTurnSkip(codex,author):
+    return str(db.toggleTurnSkip(author.server.id,codex[0]))
+def makeMinion(codex,author):
+    forceTurnSkip=False
+    if len(codex)==2:
+        forceTurnSkip = bool(codex[1])
+    
+    return db.minionByChar(author.server.id,codex[0],forceTurnSkip)
 ##############################################
 # Code for the various random calc functions #
 ##############################################
@@ -711,6 +719,10 @@ def getReply(content, message):
         elif codex[0] == 'excel':
             data = createExcel(db.getAllCharacters(message.author.server.id))
             return data
+        elif codex[0] == "makeMinion":
+            return makeMinion(codex[1:],message.author)
+        elif codex[0] == "toggleTurnSkip":
+            return toggleTurnSkip(codex[1:],message.author)
     return ""
 
 @client.event
