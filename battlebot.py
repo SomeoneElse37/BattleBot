@@ -531,15 +531,17 @@ def sendToServer(codex, author):
     new.mention = author.mention
     new.username = author.display_name
     new.userid = author.id
+    hasNewName = False
     if matchedID and len(codex) >= 3:
         new.name = codex[2]
+        hasNewName = True
     try:
         targetBattle.addCharacter(new)
     except ValueError as e:
         if e.args[0].startswith('There is already '):
-            return '''There is already a character on '{0}' named {1}.
+            return '''There is already a character on '{2}' named {1}.
 
-Try deleting {1} from '{0}' first, or typing /send {1} {2} aNewName'''.format(targetBattle.name, new.name, targetBattle.id)
+Try deleting {1} from '{2}' first, or typing /send {0} {3} {4}'''.format(char.name, new.name, targetBattle.name, targetBattle.id, 'someOtherName' if hasNewName else 'aNewName')
         else:
             raise
     return "{} successfully copied to '{}'.".format(new.name, targetBattle.name)
