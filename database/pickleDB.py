@@ -138,7 +138,7 @@ class Database:
 
     def deleteChar(self, battleId, charName):
         battle = self.getBattle(battleId)
-        battle.deleteChar(charName)
+        battle.delete(charName)
 
     def guildExists(self, guild):
         return guild.id in self.db
@@ -182,7 +182,9 @@ class Database:
     def getModifiers(self, serverId, charName):
         char = self.getCharacter(serverId, charName)
         return char.listModifiers()
+
     def toggleTurnSkip(self,charName,serverId):
         char = self.getCharacter(charName,serverId)
         char.forceTurnSkip = not char.forceTurnSkip
         return char.forceTurnSkip
+

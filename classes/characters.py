@@ -56,9 +56,10 @@ class Character:
     def __init__(self, owner, name, race, statpoints, secret=False):
         if not race in Character.sizeTiers:
             raise ValueError("Invalid race.")
-        self.mention = owner.mention
-        self.username = owner.display_name
-        self.userid = owner.id
+        if owner is not None:
+            self.mention = owner.mention
+            self.username = owner.display_name
+            self.userid = owner.id
         self.name = name
         self.race = race.lower()
         self.size = Character.sizeTiers[self.race]
@@ -81,6 +82,16 @@ class Character:
         self.pos = (0, 0)       # X and Y coordinates
         self.secret = secret    # If true, this character's stats will not be reported to players (used for some NPCs)
         self.ephemeral = False  # If true, this character will vanish on death, removing themself from the battle and revoking all their modifiers. Intended for minions.
+
+    # Constructs a deep copy of this Character and all its attributes, except the modifiers.
+    # NOTE: When adding attributes to Character, BE SURE to add them here as well!
+    def copy(self):
+        new = Character(None, self.name, self.race, self.statPoints.copy(), self.secret)
+        for attrib in ['mention', 'username', 'userid', 'health', 'pos', 'ephemeral']:
+            setattr(new, attrib, getattr(self, attrib))
+        for k, v in self.abilities.items():
+            new.abilities[k] = v.copy()
+        return new
 
     def isDead(self):
         return self.health <= 0

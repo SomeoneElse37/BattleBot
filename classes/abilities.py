@@ -44,16 +44,33 @@ class Ability:
         if 'aoe' in self.targets:
             self.targets.remove('aoe')
             self.targets.add('location')
-        if 'location' in self.targets and not self.targets.isDisjoint({'ability', 'modifier'}):
+        if 'location' in self.targets and not self.targets.isdisjoint({'ability', 'modifier'}):
             raise ValueError('AoE abilities cannot target abilities or modifiers (yet). Until I figure out a good way to handle that. Any ideas?')
-        if self.targets.isDisjoint({'self', 'ally', 'enemy'}):
+        if self.targets.isdisjoint({'self', 'ally', 'enemy'}):
             self.targets.update({'self', 'ally', 'enemy'})
 
     def __init__(self, codex):
-        self.name = codex[0]
-        self.setFields(codex[1:])
+        if codex is not None:
+            self.name = codex[0]
+            self.setFields(codex[1:])
         self.steps = []
         self.flavor = ''
+
+    # Creates a deep copy of the Ability object.
+    # NOTE: When adding new attributes to an Ability, BE SURE to add them here!
+    def copy(self):
+        new = Ability(None)
+        for attrib in ['name', 'range', 'cooldown', 'timeout', 'limit', 'flavor']:
+            setattr(new, attrib, getattr(self, attrib))
+        for attrib in ['targets']:
+            setattr(new, attrib, getattr(self, attrib).copy())
+        new.steps = []
+        for step in self.steps:
+            nstep = step[:-1]
+            nstep.append(step[-1][:])
+            new.steps.append(nstep)
+        return new
+
 
     # Each element in steps is a list of strings. The first is always 'calc', 'condition', or 'effect'.
     # The second varies.
