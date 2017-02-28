@@ -46,6 +46,14 @@ class Modifier:
         except (AttributeError, ValueError) as e:       # Shouldn't be needed in the future, but the database got borked in testing
             print('Something weird happened while trying to revoke a modifier:\n' + str(e))
 
+    def extend(self, amt):
+        self.duration += amt
+        if self.duration <= 0:
+            self.revoke()
+            return 0
+        else:
+            return self.duration
+
     def tick(self):
         if self.duration == 0:
             self.revoke()

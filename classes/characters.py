@@ -184,8 +184,7 @@ class Character:
 
     def tickAbilities(self):
         for a in self.abilities.values():
-            if a.timeout > 0:
-                a.timeout -= 1
+            a.tick()
 
     def clearTimeouts(self):
         for a in self.abilities.values():

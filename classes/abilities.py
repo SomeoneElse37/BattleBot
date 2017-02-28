@@ -78,6 +78,17 @@ class Ability:
     def getHolder(self):
         return self.owner
 
+    def extend(self, amt):
+        self.timeout += amt
+        return self.timeout
+
+    def revoke(self):
+        self.timeout = -1
+
+    def tick(self):
+        if self.timeout > 0:
+            self.timeout -= 1
+
     # Each element in steps is a list of strings. The first is always 'calc', 'condition', or 'effect'.
     # The second varies.
     #   For calc, it's the name of the variable to be calculated and assigned.
@@ -131,11 +142,23 @@ class Ability:
                     codex = codex[1:]
                 else:
                     out.append('apply')
-                if len(codex) > 0 and codex[0] in {'self', 'target'}:
+                if len(codex) > 0 and codex[0] in {'self', 'target', 'owner', 'holder', 'source'}:
                     out.append(codex[0])
                     codex = codex[1:]
                 else:
                     out.append('target')
+                if 'ability' in self.targets or 'modifier' in self.targets
+                    if out[1] == 'damage' and out[2] == 'target':
+                        out[1] = 'extend'
+                    if out[1] == 'apply' and out[2] == 'target':
+                        raise ValueError("This is an ability that targets abilities or modifiers. Applying a modifier to one of those doesn't make a whole lot of sense, now does it?")
+                else:
+                    if out[1] in {'cancel', 'extend'}:
+                        raise ValueError("You can't cancel or extend a character. Those are for modifiers and abilities.")
+                    if out[2] in {'owner', 'holder'}:
+                        raise ValueError("You can't mess with the owner or holder of a character. Those are for modifiers and abilities.")
+                if out[2] == 'source' and 'reaction' not in self.targets:
+                    raise ValueError('Source is only for reactions.')
         else:
             raise ValueError('Invalid /editability command: {}'.format(codex[0]))
 
@@ -178,8 +201,18 @@ class Ability:
 
     # Step format: ("calc" var | "condition" cond | "effect" ("damage" | "apply") ("self" | "target")) \[ RPN commands ... \]
     def executeInner(self, user, target=None, locus=None, item=None):
-        data = dict(self=user, target=target, secrets=(user.secret, target.secret))
-        log = 'Targeting {}:'.format(target.name)
+        data = dict(self=user, secrets=(user.secret, target.secret))
+        if (target is None) == (item is None):
+            raise RuntimeError("Mutually exclusive parameters 'target' and 'item' were either both specified or both None")
+        log = ""
+        if target is not None:
+            data['target'] = target
+            log += 'Targeting {}:'.format(target.name)
+        else:
+            data['target'] = item
+            data['owner'] = item.getOwner()
+            data['holder'] = item.getHolder()
+            log += 'Targeting {!r}:'.format(item)
         if locus is not None:
             data['locus'] = locus
         for step in self.steps:
@@ -196,14 +229,27 @@ class Ability:
                     log += 'Fail'
                     break
             elif step[0] == 'effect':
-                char = target if step[2] == 'target' else user
-                if step[1] == 'damage':
-                    char.health -= result
-                    char.health = max(char.health, 0)
-                    log += '\nDealt {:d} damage. {} is now at {:d} health.'.format(result, char.name, char.health)
+                if step[2] == 'target':
+                    tgt = target if item is None else item
+                elif step[2] == 'owner':
+                    tgt = item.getOwner()
+                elif step[2] == 'holder':
+                    tgt = item.getHolder()
                 else:
-                    mod = Modifier(result, owner=user, holder=char)
-                    log += '\n{} gets {} for {:d} turns.'.format(char.name, mod.short(), mod.duration)
+                    tgt = user
+                if step[1] == 'damage':     #TODO: Remember to go and make 'damage target' in modifier/ability abilities turn into 'extend target'
+                    tgt.health -= result
+                    tgt.health = max(tgt.health, 0)
+                    log += '\nDealt {:d} damage. {} is now at {:d} health.'.format(result, tgt.name, tgt.health)
+                elif step[1] == 'apply':
+                    mod = Modifier(result, owner=user, holder=tgt)
+                    log += '\n{} gets {} for {:d} turns.'.format(tgt.name, mod.short(), mod.duration)
+                elif step[1] == 'extend':
+                    name = repr(tgt)
+                    log += "\nExtended duration or cooldown of {} to {:d} turns.".format(name, tgt.extend(result))
+                elif step[1] == 'cancel':
+                    log += "\nCancelled {!r}.".format(tgt)
+                    tgt.revoke()
         return log
 
     def calcWeights(self, user, candidates):
@@ -267,7 +313,7 @@ class Ability:
             else:
                 targets = list(map(itemgetter(1), candidates))
             log += 'Targets: {!s}\n'.format(targets)
-        elif locus is not None:
+        elif 'location' in self.targets and locus is not None:
             if user.distanceTo(locus) <= self.range:
                 targets = self.getAllTargetsInRange(user, participants, locus, self.limit)
                 shuffle(targets)
