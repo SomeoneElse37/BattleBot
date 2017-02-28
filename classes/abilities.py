@@ -49,17 +49,18 @@ class Ability:
         if self.targets.isdisjoint({'self', 'ally', 'enemy'}):
             self.targets.update({'self', 'ally', 'enemy'})
 
-    def __init__(self, codex):
+    def __init__(self, codex, owner=None):
         if codex is not None:
             self.name = codex[0]
             self.setFields(codex[1:])
         self.steps = []
         self.flavor = ''
+        self.owner = owner
 
     # Creates a deep copy of the Ability object.
     # NOTE: When adding new attributes to an Ability, BE SURE to add them here!
-    def copy(self):
-        new = Ability(None)
+    def copy(self, newOwner=self.owner):
+        new = Ability(None, newOwner)
         for attrib in ['name', 'range', 'cooldown', 'timeout', 'limit', 'flavor']:
             setattr(new, attrib, getattr(self, attrib))
         for attrib in ['targets']:
@@ -71,6 +72,11 @@ class Ability:
             new.steps.append(nstep)
         return new
 
+    def getOwner(self):
+        return self.owner
+
+    def getHolder(self):
+        return self.owner
 
     # Each element in steps is a list of strings. The first is always 'calc', 'condition', or 'effect'.
     # The second varies.
@@ -171,7 +177,7 @@ class Ability:
             self.steps.append(self.parseStep(codex))
 
     # Step format: ("calc" var | "condition" cond | "effect" ("damage" | "apply") ("self" | "target")) \[ RPN commands ... \]
-    def executeInner(self, user, target, locus=None, item=None):
+    def executeInner(self, user, target=None, locus=None, item=None):
         data = dict(self=user, target=target, secrets=(user.secret, target.secret))
         log = 'Targeting {}:'.format(target.name)
         if locus is not None:
@@ -268,7 +274,7 @@ class Ability:
             else:
                 raise ValueError('That location is {:d} tiles away from you. This ability has a range of {:d}.'.format(user.distanceTo(locus), self.range))
         else:
-            if len(targets) <= self.limit:
+            if len(targets) <= self.limit and (items is None or len(items) <= self.limit):
                 for char in targets:
                     if user.distanceTo(char.pos) > self.range:
                         raise ValueError('{} is {:d} tiles away from you. This ability has a range of {:d}.'.format(char.name, user.distanceTo(char.pos), self.range))
@@ -280,9 +286,14 @@ class Ability:
                         raise ValueError('{} is not dead, and this ability can only target corpses.'.format(char.name))
             else:
                 raise ValueError('Too many targets. Requires {:d} or less; got {:d}.'.format(self.limit, len(targets)))
-        for char in targets:
-            nextLog = self.executeInner(user, char, locus)
-            log += '\n\n' + nextLog
+        if 'ability' in self.targets or 'modifier' in self.targets:
+            for item in items:
+                nextLog = self.executeInner(user, item=item, locus=locus)
+                log += '\n\n' + nextLog
+        else:
+            for char in targets:
+                nextLog = self.executeInner(user, target=char, locus=locus)
+                log += '\n\n' + nextLog
         self.timeout = self.cooldown + 1
         # print(log)
         return log

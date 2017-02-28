@@ -4,6 +4,19 @@ from calc.dice import *
 from calc.vector import *
 from calc.path import *
 
+# Awful O(n^2) stupidity, I know, but this needs to work on things that aren't hashable.
+def _removeDups(xs):
+    out = []
+    for x in xs:
+        isNew = True
+        for y in out:
+            if y is x:
+                isTrue = False
+                break
+        if isNew:
+            out.append(y)
+    return out
+
 class Battle:
     """Corresponds to a Guild, and stores a list of characters within that Guild as well as who's participating in the battle, turn order, etc."""
 
@@ -66,6 +79,13 @@ class Battle:
     # No undefined behavior here
     def addParticipant(self, name):
         self.addParticipantByChar(self.characters[name.lower()])
+
+    # Clones the named character as a minion, then adds the minion to the current battle.
+    def makeMinion(name):
+        char = self.characters[name.lower()]
+        minion = char.minionFy()
+        self.addCharacter(minion)
+        self.addParticipantByChar(minion)
 
     def removeParticipantByChar(self, char):
         index = self.participants.index(char)
@@ -296,7 +316,7 @@ class Battle:
                                 i += 1
                             else:
                                 items.append(choice(char.abilities))
-                    out = ability.execute(user, self.participants, targets=targets)
+                    out = ability.execute(user, self.participants, targets=_removeDups(targets), items=_removeDups(items))
             for char in self.participants:
                 if char.isDead() and char not in prevDeadChars:
                     self.onDeath(char)

@@ -23,12 +23,16 @@ def _updateDBFormat(database):
                     # Character attributes: username, userid, name, race, size, statPoints, baseStats, abilities, modifiers, health, location, secret
                     if not hasattr(w, 'ephemeral'):
                         w.ephemeral = False
-                    if not hasattr(w,"isMinion"):
-                        w.isMinion=True
-                        w.minionCount=0 #this tracks how often a minion has been made using this character as its base
-                        w.forceTurnSkip=False
-                    # for m, x in w.abilities.items():
+                    if not hasattr(w, 'isMinion'):
+                        w.isMinion = True
+                    if not hasattr(w, 'minionCount'):
+                        w.minionCount = 0
+                    if not hasattr(w, 'forceTurnSkip'):
+                        w.forceTurnSkip = False
+                    for m, x in w.abilities.items():
                         # Ability attributes: name, range, cooldown, timeout, targets, limit, steps, flavor
+                        if not hasattr(x, 'owner'):
+                            x.owner = w
         database['version'] = _CURRENT_DB_VERSION
 
 class Database:
@@ -118,7 +122,7 @@ class Database:
                 abl.setFields(codex[2:])
                 return str(abl)
             except KeyError:
-                abl = Ability(codex[1:])
+                abl = Ability(codex[1:], char)
                 char.abilities[abl.name.lower()] = abl
                 return str(abl)
         return False
@@ -175,17 +179,18 @@ class Database:
         battle = self.getBattle(battleId)
         battle.addParticipant(charName)
         return charName + ' has successfully joined the battle!'
-    def minionByChar(self,charName,battleId,forcedPassTurn):
-        character = self.getCharacter(battleId,charName)
+
+    def minionByChar(self, charName, battleId):
         battle = self.getBattle(battleId)
-        minion = character.minionFy(battle,forcedPassTurn)
+        minion = battle.makeMinion(charName)
         return minion
+
     def getModifiers(self, serverId, charName):
         char = self.getCharacter(serverId, charName)
         return char.listModifiers()
 
-    def toggleTurnSkip(self,charName,serverId):
-        char = self.getCharacter(charName,serverId)
+    def toggleTurnSkip(self, charName, serverId):
+        char = self.getCharacter(charName, serverId)
         char.forceTurnSkip = not char.forceTurnSkip
         return char.forceTurnSkip
 

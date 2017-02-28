@@ -31,6 +31,12 @@ class Modifier:
         self.regWithHolder()    # No-op if holder is None
         self.regWithOwner()     # Ditto for owner
 
+    def getOwner(self):
+        return self.owner
+
+    def getHolder(self):
+        return self.holder
+
     def revoke(self):
         try:
             if self.holder is not None:

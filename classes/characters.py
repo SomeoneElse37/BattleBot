@@ -65,9 +65,6 @@ class Character:
         self.size = Character.sizeTiers[self.race]
         self.statPoints = statpoints
         self.baseStats = Character.baseStats[self.race]
-        self.isMinion=False #this is used to let the bot know if a character is a minion
-        self.minionCount=0 #this tracks how often a minion has been made using this character as its base
-        self.forceTurnSkip=False #this can be used to forcefully skip characters
         # Modifiers are stored in this dictionary.
         # The keys are the same as in all the various stat dictionaries. HP, ACC, EVA, etc.
         # Each value is a pair of lists. The first element in each pair is a list of multiplicative modifiers (e.g. 120% STR for 2 turns);
@@ -82,37 +79,42 @@ class Character:
         self.pos = (0, 0)       # X and Y coordinates
         self.secret = secret    # If true, this character's stats will not be reported to players (used for some NPCs)
         self.ephemeral = False  # If true, this character will vanish on death, removing themself from the battle and revoking all their modifiers. Intended for minions.
+        self.isMinion = False   # this is used to let the bot know if a character is a minion
+        self.minionCount = 0    # this tracks how often a minion has been made using this character as its base
+        self.forceTurnSkip = False  # this can be used to forcefully skip characters
 
     # Constructs a deep copy of this Character and all its attributes, except the modifiers.
     # NOTE: When adding attributes to Character, BE SURE to add them here as well!
-    def copy(self,newName=False,isMinion=False,forcedPassTurn=False):
-        if(not newName):
-            newName=self.name
-        
+    def copy(self, newName=None):
+        changedName = False
+        if newName is None:
+            newName = self.name
+            changedName = True
         new = Character(None, newName, self.race, self.statPoints.copy(), self.secret)
-        for attrib in ['mention', 'username', 'userid', 'health', 'pos', 'ephemeral']:
+        for attrib in ['mention', 'username', 'userid', 'health', 'pos', 'ephemeral', 'isMinion', 'minionCount', 'forceTurnSkip']:
             setattr(new, attrib, getattr(self, attrib))
         for k, v in self.abilities.items():
-            new.abilities[k] = v.copy()
-        new.isMinion=isMinion
-        new.forceTurnSkip=forcedPassTurn
+            new.abilities[k] = v.copy(newOwner=new)
+        if changedName:
+            new.minionCount = 0
         return new
+
+    #this function can later be used to make a minion out of a character
+    def generateKeyForMinion(self):
+        self.minionCount += 1
+        return self.name + "#" + str(self.minionCount)
+
+    def minionFy(self):
+        newName = self.generateKeyForMinion()
+        #clone it
+        newMinion = self.copy(newName, True)
+        newMinion.ephemeral = True
+        newMinion.isMinion = True
+        return newMinion
 
     def isDead(self):
         return self.health <= 0
-    #this function can later be used to make a minion out of a character
-    def generateKeyForMinion(self):
-        self.minionCount=self.minionCount+1
-        return self.name +"#" +str(self.minionCount)
-    
-    def minionFy(self,toBattle,forcedPassTurn=False):
-        newName = self.generateKeyForMinion()
-        #clone it
-        newMinion=self.copy(newName,True,forcedPassTurn)
-        toBattle.addCharacter(newMinion)
-        toBattle.addParticipant(newName)
-        return newName #return the minion or something? I guess?
-    
+
     # # (stat, factor, duration, isMult)
     # def createModifier(self, theTuple):
     #     stat, factor, duration, isMult = theTuple
