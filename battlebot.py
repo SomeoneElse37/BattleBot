@@ -54,15 +54,6 @@ def createExcel(characterList):
         #    await client.send_file(channel, f)
         return {'error':False,'file':pathToExcel,'message':"",'deleteAfterUpload':True}
 
-def toggleTurnSkip(codex,author):
-    return str(db.toggleTurnSkip(author.server.id,codex[0]))
-def makeMinion(codex,author):
-    forceTurnSkip=False
-    print(len(codex))
-    if len(codex)==2:
-        forceTurnSkip = bool(codex[1])
-    print(forceTurnSkip)
-    return db.minionByChar(codex[0],author.server.id,forceTurnSkip)
 ##############################################
 # Code for the various random calc functions #
 ##############################################
@@ -646,6 +637,16 @@ def setSize(codex, author):
     else:
         return "You need Manage Messages or Administrator permission to change the size of the battlefield!"
 
+def toggleTurnSkip(codex, author):
+    if author.server_permissions.administrator or author.server_permissions.manage_messages:
+        return "Turn skip set to {!s}.".format(db.toggleTurnSkip(author.server.id, codex[0]))
+    else:
+        return "You need Manage Messages or Administrator permission to force characters to skip their turns!"
+
+def makeMinion(codex, author):
+    # print(len(codex))
+    return str(db.minionByChar(codex[0], author.server.id))
+
 ##################################################
 ##### Bot boilerplate code exists below here #####
 ##################################################
@@ -773,9 +774,9 @@ def getReply(content, message):
             data = createExcel(db.getAllCharacters(message.author.server.id))
             return data
         elif codex[0] == "makeMinion":
-            return makeMinion(codex[1:],message.author)
+            return makeMinion(codex[1:], message.author)
         elif codex[0] == "toggleTurnSkip":
-            return toggleTurnSkip(codex[1:],message.author)
+            return toggleTurnSkip(codex[1:], message.author)
     return ""
 
 @client.event
