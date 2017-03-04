@@ -29,7 +29,8 @@ Want to host BattleBot yourself, look at the sourcecode, or file a bug report? T
 /help ability: Deailed information on abilities and how to create them
 /help ability2: Ability Parameters
 /help ability3: The /editability command
-/help ability4: A Shocking Example
+/help ability4: Ability Effect Actions
+/help ability5: A Shocking Example
 /help rpn: Crash course on Reverse Polish Notation
 /help rpn2: Details on BattleBot's take on RPN
 /help rpn3: RPN operators only useful in abilities
@@ -175,6 +176,7 @@ BattleBot's ability system uses four commands.
 /ability abilityName [targets | path]: Use an ability. An ability that is still on cooldown cannot be used
         until the cooldown expires; but otherwise, the restrictions on this are the same as for /attack.
     If it's a targeted ability, you can give it a list of targets. If none are given, targets yourself by default.
+        For targeting an ability, give the name of the character, followed by the name of the ability.
     If it's an AoE ability, give it a path to where you want the effect to be focused.
             The path syntax is exactly the same as that described in /help move.
 /abilities name: List all of that character's abilities.
@@ -221,10 +223,8 @@ reaction: This ability triggers in response to the user being targeted with anot
         condition [cmp]: Compare the RPN result to 0 in one of six ways. If false, then stop execution
                 of the ability right then and there and start over with the next target.
             Possible values of cmp are: <0, =0, ==0, >0, <=0, !0, !=0, >=0. If none are given, default to >0.
-        effect [damage | apply] [self | target]: An effect of this ability.
-            damage: Deal damage to a character. Does not roll dice, so use one of the roll commands in /help rpn2.
-            apply: Apply a modifier to a character. The RPN expression must return a modifier: see /help rpn3.
-                Defaults to apply if neither are given.
+        effect [action] [self | target]: An effect of this ability.
+            action: Defines the action to be carried out by this effect. See /help ability4.
             self: The effect applies to the user of the ability, regardless of who the target may be.
                     Useful for recoil damage.
             target: The effect applies to the target.
@@ -235,8 +235,19 @@ reaction: This ability triggers in response to the user being targeted with anot
     rpn: The last parameter to /editability must be an RPN expression. It is executed whenever the ability is used,
             and its return value determines what will happen. See /rpn for details.
 
-Type /help ability4 for an example.""",
-        'ability4': """A Shocking Example
+Type /help ability5 for an example.""",
+        'ability4': """Ability Effect Actions
+
+These are all the things that abilities can do that have an effect on the characters in the battle. Any one of them may be specified as a parameter to /editability, immediately following 'effect'. If none are specified, the default is 'apply'.
+
+damage: Deal damage to a character. Does not roll dice, so use one of the roll commands in /help rpn2.
+apply: Apply a modifier to a character. The RPN expression must return a modifier: see /help rpn3.
+cancel: Revokes a modifier, or silences an ability until end of battle. Totally ignores the RPN expression,
+    since "silenced for four turns" doesn't really make any sense. Use extend for that.
+extend: Extends the duration or cooldown of a modifier or ability. The RPN expression specifies how many turns to extend the cooldown.
+    Negative numbers will reduce the duration or cooldown.
+    Also note that, since a silenced ability has a cooldown of -1, extending its cooldown will un-silence it.""",
+        'ability5': """A Shocking Example
 
 Say you've got a character named "Zeus", and you want him to be able to summon lightning. You could type the following commands in this order:
 
@@ -309,10 +320,12 @@ These first few aren't operators, per se, as they take no arguments at all.
 self: The actual Character using this ability. Intended to be followed by one of the commands in the next section.
 target: The character targeted by this ability.
 locus: For an AOE ability, the location where the effect is centered. Not available otherwise.
+owner: Creator of the targeted modifier or ability.
+holder: The character who the targeted modifier affects.
 
-These all take one argument, extected to be a character (so... self or target).
+These all take one character as their argument (self, target, etc.).
 hp: The *maximum* HP of the character.
-acc: The Accuracy stat of the character. All modifiers and whatnot are properly taken into account.
+acc: The Accuracy stat of the character, taking all modifiers into account.
 eva: Evasion stat.
 atk: Attack.
 def: Defense.
@@ -320,8 +333,8 @@ spd: Speed.
 health: The character's *current* HP.
 pos: The character's position.
 
-Next, the modifier operators. All take three arguments, of the form [factor, stat, duration]. They do not affect anything right away, but the returned object can be applied to a character later on in the ability.
-They are +mod, -mod, mod%, +mod%, and -mod%. The syntax parallels that of /addModifier, described in /help gm. So I'll just give some examples in the RPN format here:
+Next, the modifier operators. All take three arguments, of the form [factor, stat, duration]. These just create the modifier; the 'apply' ability effect will apply it to a character.
+The syntax parallels that of /addModifier, described in /help gm. So I'll just give some examples in the RPN format here:
     10 ATK 3 +mod == +10 Strength for 3 turns
     5 EVA 2 -mod == -5 Evasion for 2 turns
     150 SPD 0 mod% == 150% Speed until end of turn
@@ -350,9 +363,10 @@ These commands/behaviors only function if you are a GM, meaning that you have ei
 /gmattack name acc atk [secret?]: Perform at attack with the given Accuracy and Attack against the named character.
     If 0 or a negative number is specified for acc or atk, those stats will not be rolled.
     If anything at all is given for the fourth parameter, the bot will not echo the Accuracy or Attack specified.
-    It's up to you to delete/edit your post to prevent players from reading the stats from it.
 /setsize x y: Set the size of the battlefield to (x, y).
-/excel: Generate an ODF spreadsheet of... something. I'm not sure what.""",
+/excel: Generate an ODF spreadsheet. Experimental.
+/makeMinion name: Clone the character as a minion.
+/toggleTurnSkip name: Toggle whether to skip the character's turns.""",
         'calc': """Calculation Commands
 These just roll dice and calculate stuff. They have no effect on the battle at all.
 
