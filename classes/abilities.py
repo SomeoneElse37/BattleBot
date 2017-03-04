@@ -297,7 +297,7 @@ class Ability:
         if self.timeout > 0:
             raise ValueError('This ability is on cooldown for {:d} more turns.'.format(self.timeout))
         if self.timeout < 0:
-            raise ValueError('This ability is cancelled.')
+            raise ValueError('This ability is silenced.')
         log = ''
         if 'random' in self.targets:
             # print('Executing randomly-targeted ability.')
