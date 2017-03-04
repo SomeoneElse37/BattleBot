@@ -203,17 +203,19 @@ class Ability:
 
     # Step format: ("calc" var | "condition" cond | "effect" ("damage" | "apply") ("self" | "target")) \[ RPN commands ... \]
     def executeInner(self, user, target=None, locus=None, item=None):
-        data = dict(self=user, secrets=(user.secret, target.secret))
+        data = dict(self=user)
         if (target is None) == (item is None):
             raise RuntimeError("Mutually exclusive parameters 'target' and 'item' were either both specified or both None")
         log = ""
         if target is not None:
             data['target'] = target
+            data['secrets'] = (user.secret, target.secret)
             log += 'Targeting {}:'.format(target.name)
         else:
             data['target'] = item
             data['owner'] = item.getOwner()
             data['holder'] = item.getHolder()
+            data['secrets'] = (user.secret, item.getHolder().secret or item.getOwner().secret)
             log += 'Targeting {!r}:'.format(item)
         if locus is not None:
             data['locus'] = locus
@@ -294,6 +296,8 @@ class Ability:
     def execute(self, user, participants, targets=None, locus=None, items=None):
         if self.timeout > 0:
             raise ValueError('This ability is on cooldown for {:d} more turns.'.format(self.timeout))
+        if self.timeout < 0:
+            raise ValueError('This ability is cancelled.')
         log = ''
         if 'random' in self.targets:
             # print('Executing randomly-targeted ability.')

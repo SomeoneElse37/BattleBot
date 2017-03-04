@@ -14,7 +14,7 @@ def _removeDups(xs):
                 isTrue = False
                 break
         if isNew:
-            out.append(y)
+            out.append(x)
     return out
 
 class Battle:

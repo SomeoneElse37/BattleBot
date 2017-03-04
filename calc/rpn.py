@@ -69,7 +69,8 @@ def parseRPN(codex, data = {}, functions = {}):
     if len(stack) == 1:
         return stack[0], log
     else:
-        raise ValueError('Expected stack to contain exactly one item after execution; got ' + str(stack))
+        # log += '\n\nWarning: Expected stack to contain exactly one item after execution; got {!s}'.format(stack)
+        return stack, log
 
 def testRPN(codex):
     retval, log = parseRPN(codex)
