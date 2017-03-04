@@ -82,11 +82,12 @@ class Battle:
         self.addParticipantByChar(self.characters[name.lower()])
 
     # Clones the named character as a minion, then adds the minion to the current battle.
-    def makeMinion(name):
+    def makeMinion(self, name):
         char = self.characters[name.lower()]
         minion = char.minionFy()
         self.addCharacter(minion)
         self.addParticipantByChar(minion)
+        return minion
 
     def removeParticipantByChar(self, char):
         index = self.participants.index(char)

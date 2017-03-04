@@ -107,7 +107,7 @@ class Character:
     def minionFy(self):
         newName = self.generateKeyForMinion()
         #clone it
-        newMinion = self.copy(newName, True)
+        newMinion = self.copy(newName)
         newMinion.ephemeral = True
         newMinion.isMinion = True
         return newMinion

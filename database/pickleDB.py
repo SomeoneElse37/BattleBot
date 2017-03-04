@@ -194,3 +194,12 @@ class Database:
         char.forceTurnSkip = not char.forceTurnSkip
         return char.forceTurnSkip
 
+    def deMinionFy(self):
+        # print(str(self.db))
+        for battle in self.db.values():
+            try:
+                for char in battle.characters.values():
+                    char.isMinion = False
+            except AttributeError:
+                pass
+

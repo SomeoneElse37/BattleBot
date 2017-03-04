@@ -37,6 +37,11 @@ db = results["db"]
 results = None #we don't need it anymore. Though it isn't like we clear a lot of RAM with it, its better then nothing
 generateExcel = True
 
+if len(argv) >= 1 and argv[-1].lower() == 'fixminions':
+    print('Marking all characters as non-minions.')
+    db.deMinionFy()
+
+
 if generateExcel:
     try:
         import modules.odsify_characters
