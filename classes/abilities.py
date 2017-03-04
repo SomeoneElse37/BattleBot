@@ -59,7 +59,9 @@ class Ability:
 
     # Creates a deep copy of the Ability object.
     # NOTE: When adding new attributes to an Ability, BE SURE to add them here!
-    def copy(self, newOwner=self.owner):
+    def copy(self, newOwner=None):
+        if newOwner is None:
+            newOwner = self.owner
         new = Ability(None, newOwner)
         for attrib in ['name', 'range', 'cooldown', 'timeout', 'limit', 'flavor']:
             setattr(new, attrib, getattr(self, attrib))
@@ -147,7 +149,7 @@ class Ability:
                     codex = codex[1:]
                 else:
                     out.append('target')
-                if 'ability' in self.targets or 'modifier' in self.targets
+                if 'ability' in self.targets or 'modifier' in self.targets:
                     if out[1] == 'damage' and out[2] == 'target':
                         out[1] = 'extend'
                     if out[1] == 'apply' and out[2] == 'target':

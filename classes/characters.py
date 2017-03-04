@@ -205,7 +205,8 @@ Stat Points: [{:s}]
 Current Stats: [{:s}]
 Abilities: {!s}
 Location: ({:d}, {:d})
-Health: {:d}""".format(self.username, self.userid, self.name, self.race, int(self.size), s1, s2, list(self.abilities.values()), int(self.pos[0]), int(self.pos[1]), int(self.health))
+Health: {:d}
+Minion: {!s}""".format(self.username, self.userid, self.name, self.race, int(self.size), s1, s2, list(self.abilities.values()), int(self.pos[0]), int(self.pos[1]), int(self.health), self.isMinion)
 
     # Reset health to the maximum, and clear all modifiers.
     def respawn(self):

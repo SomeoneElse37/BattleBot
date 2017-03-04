@@ -41,7 +41,7 @@ class Battle:
         remove=[]
         for k, v in self.characters.items():
             v.respawn()
-            v.minionCount=0
+            v.minionCount = 0
             if v.isMinion:
                 remove.append(k)
         for k in remove: del self.characters[k]
@@ -78,6 +78,7 @@ class Battle:
 
     # No undefined behavior here
     def addParticipant(self, name):
+        print(str(self.characters.keys()))
         self.addParticipantByChar(self.characters[name.lower()])
 
     # Clones the named character as a minion, then adds the minion to the current battle.

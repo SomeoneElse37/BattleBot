@@ -24,7 +24,7 @@ def _updateDBFormat(database):
                     if not hasattr(w, 'ephemeral'):
                         w.ephemeral = False
                     if not hasattr(w, 'isMinion'):
-                        w.isMinion = True
+                        w.isMinion = False
                     if not hasattr(w, 'minionCount'):
                         w.minionCount = 0
                     if not hasattr(w, 'forceTurnSkip'):
