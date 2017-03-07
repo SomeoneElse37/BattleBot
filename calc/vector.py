@@ -40,9 +40,17 @@ def flipVec(v):
 def subVec(v1, v2):
     return (v1[0] - v2[0], v1[1] - v2[1])
 
+# Scalar multiplication
+def scale(scalar, v):
+    return (scalar * v[0], scalar * v[1])
+
+# Scalar division (essentially)
+def recipscale(v, scalar):
+    return (v[0] / scalar, v[1] / scalar)
+
 # Dot product
 def dot(a, b):
-    return a[0] * b[0] + a[1] + b[1]
+    return a[0] * b[0] + a[1] * b[1]
 
 # Cross product (okay, technically the Z coordinate of the cross product)
 def cross(a, b):
@@ -52,7 +60,11 @@ class Vector:
     """ A wrapper class for my simple (x, y) pair vectors. """
 
     def __init__(self, coords):
-        self.coords = coords
+        self._coords = coords
+
+    @property
+    def coords(self):
+        return self._coords
 
     def __add__(self, other):
         return Vector(addVec(self.coords, other.coords))
@@ -65,15 +77,27 @@ class Vector:
 
     # Magnitude, obtainable via abs(vec). Makes sense, right?
     def __abs__(self):
-        return Vector(magnitude(self.coords))
+        return magnitude(self.coords)
 
-    # Cross product using * (sorta... again, technically the Z coordinate of the cross product)
+    # Dot product using *, or scalar product when multiplying by a non-Vector
     def __mul__(self, other):
-        return Vector(cross(self.coords, other.coords))
+        if isinstance(other, Vector):
+            return dot(self.coords, other.coords)
+        else:
+            return Vector(scale(other, self.coords))
 
-    # Dot product using @ (the matrix multiplication operator, and matrix multiplication uses dot products)
-    def __mul__(self, other):
-        return Vector(dot(self.coords, other.coords))
+    # Will only be called in an expression like "x * v", when v is a Vector and x doesn't know how to multiply itself by a Vector
+    # ergo, when this is called, x is not a Vector
+    def __rmul__(self, other):
+        return Vector(scale(other, self.coords))
+
+    # Division by a scalar
+    def __truediv__(self, other):
+        return Vector(recipscale(self.coords, other))
+
+    # Cross product using @ (sorta... again, technically the Z coordinate of the cross product)
+    def __matmul__(self, other):
+        return cross(self.coords, other.coords)
 
     def setMag(self, dist):
         return Vector(setMag(self.coords, dist))
@@ -81,4 +105,8 @@ class Vector:
     # Angle between this vector and the +X axis, in radians.
     def atan2(self):
         return math.atan2(self.coords[1], self.coords[0])
+
+    def __repr__(self):
+        return str(self.coords)
+
 
