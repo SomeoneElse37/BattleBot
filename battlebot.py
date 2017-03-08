@@ -720,7 +720,15 @@ def getReply(content, message):
             if len(codex) > 1:
                 key = codex[1].lower()
                 if key in help_dict:
-                    return help_dict[key]
+                    entry = help_dict[key]
+                    try:
+                        if len(codex) > 2:
+                            key2 = codex[2].lower()
+                            if key2 in entry:
+                                return entry.get(key2)  # Using .get() instead of the usual dict[key] syntax because [key] might work on a string,
+                        return entry.get(key)           # and if entry is a string, I want to be sure that this throws an exception
+                    except (TypeError, NameError, AttributeError):
+                        return entry
             else:
                 return help_dict['bot']
         elif codex[0] == 'roll':

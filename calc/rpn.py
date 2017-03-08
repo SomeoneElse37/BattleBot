@@ -7,6 +7,12 @@ def _sumThings(xs, data):
     total = sum(xs)
     return [total], '{:d} = {!s}'.format(total, xs)
 
+def _multThings(xs, data):
+    product = 1
+    for x in xs:
+        product *= x
+    return [product], '{:d} = [{:s}]'.format(product, '*'.join(map(str, xs)))
+
 def _flip(pair):
     # print('##### Flipping {!s} #####'.format(pair))
     a, b = pair
@@ -34,8 +40,13 @@ baseFunctions = {'+': (2, lambda xs, data: ([xs[0] + xs[1]], '')),      # Arithm
         '**': (2, lambda xs, data: ([xs[0] ** xs[1]], '')),
         '/': (2, lambda xs, data: ([xs[0] / xs[1]], '')),
         '//': (2, lambda xs, data: ([int(xs[0] // xs[1])], '')),
-        'sum': (-1, _sumThings),
         'abs': (1, _wrap(abs)),
+        'min': (2, lambda xs, data: ([min(xs)], '')),
+        'max': (2, lambda xs, data: ([max(xs)], '')),
+        'sum': (-1, _sumThings),
+        'product': (-1, _multThings),
+        'minimum': (-1, lambda xs, data: ([min(xs)], '')),
+        'maximum': (-1, lambda xs, data: ([max(xs)], '')),
         'sqrt': (1, _wrap(math.sqrt)),      # Square root
         'sin': (1, _wrap(math.sin)),        # Trig functions
         'cos': (1, _wrap(math.cos)),
