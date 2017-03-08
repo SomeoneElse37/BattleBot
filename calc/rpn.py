@@ -41,8 +41,10 @@ baseFunctions = {'+': (2, lambda xs, data: ([xs[0] + xs[1]], '')),
         'asin': (1, _wrap(math.asin)),
         'acos': (1, _wrap(math.acos)),
         'atan': (1, _wrap(math.atan)),
+        'atan2': (1, lambda xs, data: ([xs[0].atan2()], '')),
         'dot': (2, lambda xs, data: ([xs[0] * xs[1]], '')),
         'cross': (2, lambda xs, data: ([xs[0] @ xs[1]], '')),
+        'dist': (2, lambda xs, data: ([abs(xs[0] - xs[1])], '')),
         'vec': (2, lambda xs, data: ([Vector((xs[0], xs[1]))], '')),
         'coords': (1, lambda xs, data: (xs[0].coords, '')),                             # Vector.coords returns a tuple, which is iterable, so it should work in List.extend()
         'roll': (1, lambda xs, data: _flip(prettyRoll(xs[0]))),                         # Rolls some d10s. Simple enough.
@@ -120,7 +122,6 @@ auxFunctions = {
         'spd': (1, statgetter('spd')),
         'health': (1, lambda xs, data: ([xs[0].health], '')),
         'pos': (1, lambda xs, data: ([xs[0].pos], '')),
-        'dist': (2, lambda xs, data: ([distance(xs[0], xs[1])], '')),
         '+mod': (3, lambda xs, data: ([(xs[2], xs[0], xs[1], False)], '')),
         '-mod': (3, lambda xs, data: ([(xs[2], -xs[0], xs[1], False)], '')),
         'mod%': (3, lambda xs, data: ([(xs[2], xs[0] / 100, xs[1], True)], '')),
