@@ -26,7 +26,8 @@ baseData = {'secrets': (False, False),
         'e': math.e}
 
 # Operators and functions that parseRPN should have access to, even without any character context
-baseFunctions = {'+': (2, lambda xs, data: ([xs[0] + xs[1]], '')),
+# Entry format: 'operatorKey': (numParams, lambda paramList, dataDict: (retValsList, noteString))
+baseFunctions = {'+': (2, lambda xs, data: ([xs[0] + xs[1]], '')),      # Arithmetic functions
         '-': (2, lambda xs, data: ([xs[0] - xs[1]], '')),
         '*': (2, lambda xs, data: ([xs[0] * xs[1]], '')),
         '@': (2, lambda xs, data: ([xs[0] @ xs[1]], '')),
@@ -35,26 +36,29 @@ baseFunctions = {'+': (2, lambda xs, data: ([xs[0] + xs[1]], '')),
         '//': (2, lambda xs, data: ([int(xs[0] // xs[1])], '')),
         'sum': (-1, _sumThings),
         'abs': (1, _wrap(abs)),
-        'sqrt': (1, _wrap(math.sqrt)),
-        'sin': (1, _wrap(math.sin)),
+        'sqrt': (1, _wrap(math.sqrt)),      # Square root
+        'sin': (1, _wrap(math.sin)),        # Trig functions
         'cos': (1, _wrap(math.cos)),
         'tan': (1, _wrap(math.tan)),
         'asin': (1, _wrap(math.asin)),
         'acos': (1, _wrap(math.acos)),
         'atan': (1, _wrap(math.atan)),
-        'atan2': (1, lambda xs, data: ([xs[0].atan2()], '')),
-        'dot': (2, lambda xs, data: ([xs[0] * xs[1]], '')),
+        'atan2': (1, lambda xs, data: ([xs[0].atan2()], '')),           # atan2 takes a vector and returns the angle between it and the positive X axis
+        'dot': (2, lambda xs, data: ([xs[0] * xs[1]], '')),             # Vector math
         'cross': (2, lambda xs, data: ([xs[0] @ xs[1]], '')),
         'dist': (2, lambda xs, data: ([abs(xs[0] - xs[1])], '')),
-        'vec': (2, lambda xs, data: ([Vector((xs[0], xs[1]))], '')),
-        'coords': (1, lambda xs, data: (xs[0].coords, '')),                             # Vector.coords returns a tuple, which is iterable, so it should work in List.extend()
+        'vec': (2, lambda xs, data: ([Vector((xs[0], xs[1]))], '')),    # Combines two numbers- X and Y coordinates- into a vector
+        'coords': (1, lambda xs, data: (xs[0].coords, '')),             # Decomposes a vector into its X and Y coordinates
         'roll': (1, lambda xs, data: _flip(prettyRoll(xs[0]))),                         # Rolls some d10s. Simple enough.
         'rollh': (1, lambda xs, data: _flip(prettyRoll(xs[0], True))),                  # Rolls some d10s, but hides the actual rolls.
         'rollu': (1, lambda xs, data: _flip(prettyRoll(xs[0], data['secrets'][0]))),    # Hides the actual rolls if and only if the user's stats are hidden.
         'rollt': (1, lambda xs, data: _flip(prettyRoll(xs[0], data['secrets'][1]))),    # Hides the actual rolls if and only if the target's stats are hidden.
         'rollacc': (2, _rollAccCheckForRPN),
         'calcdmg': (2, lambda xs, data: _flip(damageString(xs[0], xs[1]))),
-        'rolldmg': (2, lambda xs, data: _flip(prettyDamage(xs[0], xs[1], data['secrets'])))}
+        'rolldmg': (2, lambda xs, data: _flip(prettyDamage(xs[0], xs[1], data['secrets']))),
+        'swap': (2, lambda xs, data: (xs[::-1], '')),       # Standard stack manipulation operators
+        'drop': (1, lambda xs, data: ([], '')),
+        'dup': (1, lambda xs, data: ([xs[0], xs[0]], ''))}
 
 # Parses an RPN codex, with the specified context. data and functions will be merged with baseData and baseFunctions,
 # with the data and functions having precedence if any of the keys conflict.
@@ -122,13 +126,13 @@ auxFunctions = {
         'def': (1, statgetter('def', 'dfn')),
         'spd': (1, statgetter('spd')),
         'health': (1, lambda xs, data: ([xs[0].health], '')),
-        'pos': (1, lambda xs, data: ([xs[0].pos], '')),
-        '+mod': (3, lambda xs, data: ([(xs[2], xs[0], xs[1], False)], '')),
-        '-mod': (3, lambda xs, data: ([(xs[2], -xs[0], xs[1], False)], '')),
+        'pos': (1, lambda xs, data: ([Vector(xs[0].pos)], '')),
+        '+mod': (3, lambda xs, data: ([(xs[2], xs[0], xs[1], False)], '')),         # Modifier tuple format:
+        '-mod': (3, lambda xs, data: ([(xs[2], -xs[0], xs[1], False)], '')),        # (stat, factor, duration, isMult)
         'mod%': (3, lambda xs, data: ([(xs[2], xs[0] / 100, xs[1], True)], '')),
         '+mod%': (3, lambda xs, data: ([(xs[2], 1 + xs[0] / 100, xs[1], True)], '')),
         '-mod%': (3, lambda xs, data: ([(xs[2], 1 - xs[0] / 100, xs[1], True)], ''))}
-# stat, factor, duration, isMult
+
 comparisons = {
         '<0': lambda n: n < 0,
         '==0': lambda n: n == 0,
