@@ -484,12 +484,12 @@ def showMap(codex, author):
         return out
 
 def restat(codex, author):
-    char = db.getCharacter(author.server.id,codex[0].lower())
+    char = db.getCharacter(author.server.id, codex[0].lower())
     #battle = database[author.server.id]
     #char = battle.characters[codex[0].lower()]
     isGM = author.server_permissions.administrator or author.server_permissions.manage_messages
     if author.id == char.userid or isGM:
-        result = db.updateStats(author.server.id, codex[0].lower(),makeStatsFromCodex[codex[1:]],isGM)
+        result = db.updateStats(author.server.id, codex[0].lower(), makeStatsFromCodex[codex[1:]], isGM)
         if result:
             return result
         return "You need Manage Messages or Administrator permission to restat your characters during a battle!"
@@ -500,6 +500,17 @@ def restat(codex, author):
 #            return "You need Manage Messages or Administrator permission to restat your characters during a battle!"
     else:
         return "You need Manage Messages or Administrator permission to restat other players' characters!"
+
+def setAttackRange(codex, author):
+    char = db.getCharacter(author.server.id, codex[0].lower())
+    isGM = author.server_permissions.administrator or author.server_permissions.manage_messages
+    if author.id == char.userid or isGM:
+        result = db.setAttackRange(author.server.id, codex[0].lower(), codex[1], isGM)
+        if result is not None:
+            return result
+        return "You need Manage Messages or Administrator permission to modify your characters during a battle!"
+    else:
+        return "You need Manage Messages or Administrator permission to modify other players' characters!"
 
 # Will be set to discord.Client() later on; sendToServer needs to know of this right now (but will not be called until later)
 client = None;
@@ -739,6 +750,8 @@ def getReply(content, message):
             return makeChar(codex[1:], message.author)
         elif codex[0] == 'restat':
             return restat(codex[1:], message.author)
+        elif codex[0] == 'setreach':
+            return setAttackRange(codex[1:], message.author)
         elif codex[0] == 'join':
             return joinBattle(codex[1:], message.author)
         elif codex[0] == 'list':

@@ -268,13 +268,7 @@ Want to host BattleBot yourself, look at the sourcecode, or file a bug report? T
 /help stats: How stats work in BattleBot
 /help modifier: How stat modifiers (i.e. buffs and debuffs) work
 /help ability: Deailed information on abilities and how to create them
-/help ability2: Ability Parameters
-/help ability3: The /editability command
-/help ability4: Ability Effect Actions
-/help ability5: A Shocking Example
 /help rpn: Crash course on Reverse Polish Notation
-/help rpn2: Details on BattleBot's take on RPN
-/help rpn3: RPN operators only useful in abilities
 /help gm: Commands for GMs
 /help calc: Commands that roll dice and calculate stuff. Mostly obsoleted by all the above.
 
@@ -287,6 +281,7 @@ These commands are usable by all players, and do not typically have any impact o
 /makechar name race [hp acc eva atk dfn spd]: Create a character with the given name, race, and stat point distribution.
     Accepted races: faerie, elf, human, werecat, elfcat, cyborg, robot, kraken, elfship, steamship
 /restat name hp acc eva atk dfn spd: Reshuffle your stats. Only works outside of battle.
+/setreach name dist: Set the range of the character's basic attack.
 /delete name: Delete a character. Only works on characters you created. Warning, this is permanent!
 /join name: Join the battle ongoing on your server.
     Support for using /join with no argument to automatically add one of your characters is planned, but NYI.

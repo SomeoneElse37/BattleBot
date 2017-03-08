@@ -3,7 +3,7 @@ from classes.abilities import Ability
 
 #This file contains everything to interact with the pickle version of the database
 
-_CURRENT_DB_VERSION = 20
+_CURRENT_DB_VERSION = 21
 
 def _updateDBFormat(database):
     if 'version' not in database or database['version'] < _CURRENT_DB_VERSION:
@@ -29,6 +29,8 @@ def _updateDBFormat(database):
                         w.minionCount = 0
                     if not hasattr(w, 'forceTurnSkip'):
                         w.forceTurnSkip = False
+                    if not hasattr(w, 'attackRange'):
+                        w.attackRange = 1
                     for m, x in w.abilities.items():
                         # Ability attributes: name, range, cooldown, timeout, targets, limit, steps, flavor
                         if not hasattr(x, 'owner'):
@@ -87,9 +89,9 @@ class Database:
         char.secret = not char.secret
         return char
 
-    def updateStats(self, serverId, charName, stats, overwriteBattleLock=False):
+    def updateStats(self, serverId, charName, stats, isGM=False):
         battle = self.getBattle(serverId)
-        char = self.getCharacter(charName)
+        char = self.getCharacter(serverId, charName)
         if char not in battle.participants or isGM:
             char.statPoints = stats
             return str(char) + '\n\n{:d} stat points used.'.format(sum(char.statPoints.values()))
@@ -195,6 +197,15 @@ class Database:
         char = self.getCharacter(charName, serverId)
         char.forceTurnSkip = not char.forceTurnSkip
         return char.forceTurnSkip
+
+    def setAttackRange(self, serverId, charName, newAR, isGM=False):
+        battle = self.getBattle(serverId)
+        char = self.getCharacter(serverId, charName)
+        if char not in battle.participants or isGM:
+            char.attackRange = int(newAR)
+            return str(char)
+        return None
+
 
     def deMinionFy(self):
         # print(str(self.db))

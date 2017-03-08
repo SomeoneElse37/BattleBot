@@ -82,6 +82,7 @@ class Character:
         self.isMinion = False   # this is used to let the bot know if a character is a minion
         self.minionCount = 0    # this tracks how often a minion has been made using this character as its base
         self.forceTurnSkip = False  # this can be used to forcefully skip characters
+        self.attackRange = 1    # At what distance can the character perform a basic attack (effective minimum is 1.5, disregarding this value)
 
     # Constructs a deep copy of this Character and all its attributes, except the modifiers.
     # NOTE: When adding attributes to Character, BE SURE to add them here as well!
@@ -204,9 +205,11 @@ Size Tier: {:d}
 Stat Points: [{:s}]
 Current Stats: [{:s}]
 Abilities: {!s}
+Reach: {:d}
 Location: ({:d}, {:d})
 Health: {:d}
-Minion: {!s}""".format(self.username, self.userid, self.name, self.race, int(self.size), s1, s2, list(self.abilities.values()), int(self.pos[0]), int(self.pos[1]), int(self.health), self.isMinion)
+Minion: {!s}""".format(self.username, self.userid, self.name, self.race, int(self.size), s1, s2, list(self.abilities.values()), \
+        max(int(self.attackRange), 1.5), int(self.pos[0]), int(self.pos[1]), int(self.health), self.isMinion)
 
     # Reset health to the maximum, and clear all modifiers.
     def respawn(self):
@@ -300,7 +303,7 @@ Minion: {!s}""".format(self.username, self.userid, self.name, self.race, int(sel
 
     # Will be fancier once abilities are in
     def canMelee(self, pos):
-        return self.distanceTo(pos) <= 1.5  # sqrt(2) ~= 1.414
+        return self.distanceTo(pos) <= max(self.attackRange, 1.5)  # sqrt(2) ~= 1.414
 
     def inBox(self, minX, maxX, minY, maxY):
         return minX <= self.pos[0] <= maxX and minY <= self.pos[1] <= maxY
