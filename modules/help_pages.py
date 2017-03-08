@@ -128,7 +128,7 @@ All operators are case-insensitive. calcdmg, CALCDMG, and caLCdmG all work just 
 /help rpn vector: Vector math
 /help rpn stack: Operators that directly manipulate the stack
 /help rpn roll: Dice-rolling operators
-/help rpn ability: The operators that only work in abilities"""
+/help rpn ability: The operators that only work in abilities""",
         'number': """Numerical Operators
 
 First, the basics. These operators all pop two numbers off the stack, and push their result back on.
@@ -197,7 +197,7 @@ Taking the arccosine of that returns the angle itself.""",
 Here are some operators that just mess with the stack, totally disregarding the actual contents of the elements they're shuffling around.
 swap: Swaps the positions of the two elements at the top of the stack.
 drop: Takes the top element off the stack and deletes it. Handy for getting rid of an unwanted coordinate from coords.
-dup: Takes the top element on the stack and duplicates it. Now there's two elements, just like the one that was popped."""
+dup: Takes the top element on the stack and duplicates it. Now there's two elements, just like the one that was popped.""",
         'roll': """Dice-rolling Operators
 
 roll: Takes one argument off the stack. Roll that namy d10s, and push the sum back on the stack.
