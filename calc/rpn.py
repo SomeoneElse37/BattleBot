@@ -1,37 +1,57 @@
+import math
+
 from calc.dice import *
 from calc.vector import *
 
-def sumThings(xs, data):
+def _sumThings(xs, data):
     total = sum(xs)
     return [total], '{:d} = {!s}'.format(total, xs)
 
-def flip(pair):
+def _flip(pair):
     # print('##### Flipping {!s} #####'.format(pair))
     a, b = pair
     return [b], a
 
-def rollAccCheckForRPN(xs, data):
+def _wrap(fn):
+    return lambda xs, data: ([fn(xs[0])], '')
+
+def _rollAccCheckForRPN(xs, data):
     log, hit = prettyCheck(xs[0], xs[1], data['secrets'])
     return [(1 if hit else 0)], log
 
 # Any data that parseRPN() could be expected to be able to look up from the beginning
 # By default, considers both "characters'" stats to be visible (because they don't really have stats to hide)
-baseData = {'secrets': (False, False)}
+baseData = {'secrets': (False, False),
+        'pi': math.pi,
+        'e': math.e}
 
 # Operators and functions that parseRPN should have access to, even without any character context
 baseFunctions = {'+': (2, lambda xs, data: ([xs[0] + xs[1]], '')),
         '-': (2, lambda xs, data: ([xs[0] - xs[1]], '')),
         '*': (2, lambda xs, data: ([xs[0] * xs[1]], '')),
+        '@': (2, lambda xs, data: ([xs[0] @ xs[1]], '')),
         '/': (2, lambda xs, data: ([xs[0] / xs[1]], '')),
         '//': (2, lambda xs, data: ([int(xs[0] // xs[1])], '')),
-        'sum': (-1, sumThings),
-        'roll': (1, lambda xs, data: flip(prettyRoll(xs[0]))),                          # Rolls some d10s. Simple enough.
-        'rollh': (1, lambda xs, data: flip(prettyRoll(xs[0], True))),                   # Rolls some d10s, but hides the actual rolls.
-        'rollu': (1, lambda xs, data: flip(prettyRoll(xs[0], data['secrets'][0]))),     # Hides the actual rolls if and only if the user's stats are hidden.
-        'rollt': (1, lambda xs, data: flip(prettyRoll(xs[0], data['secrets'][1]))),     # Hides the actual rolls if and only if the target's stats are hidden.
-        'rollacc': (2, rollAccCheckForRPN),
-        'calcdmg': (2, lambda xs, data: flip(damageString(xs[0], xs[1]))),
-        'rolldmg': (2, lambda xs, data: flip(prettyDamage(xs[0], xs[1], data['secrets'])))}
+        'sum': (-1, _sumThings),
+        'abs': (1, _wrap(abs)),
+        'sqrt': (1, _wrap(math.sqrt)),
+        'sin': (1, _wrap(math.sin)),
+        'cos': (1, _wrap(math.cos)),
+        'tan': (1, _wrap(math.tan)),
+        'asin': (1, _wrap(math.asin)),
+        'acos': (1, _wrap(math.acos)),
+        'atan': (1, _wrap(math.atan)),
+        'dot': (2, lambda xs, data: ([xs[0] * xs[1]], '')),
+        'cross': (2, lambda xs, data: ([xs[0] @ xs[1]], '')),
+        'vec': (2, lambda xs, data: ([Vector((xs[0], xs[1]))], '')),
+        'coords': (1, lambda xs, data: (xs[0].coords, '')),                             # Vector.coords returns a tuple, which is iterable, so it should work in List.extend()
+        'roll': (1, lambda xs, data: _flip(prettyRoll(xs[0]))),                         # Rolls some d10s. Simple enough.
+        'rollh': (1, lambda xs, data: _flip(prettyRoll(xs[0], True))),                  # Rolls some d10s, but hides the actual rolls.
+        'rollu': (1, lambda xs, data: _flip(prettyRoll(xs[0], data['secrets'][0]))),    # Hides the actual rolls if and only if the user's stats are hidden.
+        'rollt': (1, lambda xs, data: _flip(prettyRoll(xs[0], data['secrets'][1]))),    # Hides the actual rolls if and only if the target's stats are hidden.
+        'rollacc': (2, _rollAccCheckForRPN),
+        'calcdmg': (2, lambda xs, data: _flip(damageString(xs[0], xs[1]))),
+        'rolldmg': (2, lambda xs, data: _flip(prettyDamage(xs[0], xs[1], data['secrets'])))}
 
 # Parses an RPN codex, with the specified context. data and functions will be merged with baseData and baseFunctions,
 # with the data and functions having precedence if any of the keys conflict.
