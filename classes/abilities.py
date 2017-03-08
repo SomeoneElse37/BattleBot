@@ -282,12 +282,16 @@ class Ability:
 
     def canHit(self, user, locus, char, radius):
         if char.distanceTo(locus) > radius:
+            # print('{} is too far away.'.format(char.name))
             return False
         if ((char.isDead()) != ('corpse' in self.targets)):
+            # print('{} is dead.'.format(char.name))
             return False
         if char is user and 'self' not in self.targets:
+            # print('{} is the user.'.format(char.name))
             return False
         if char is not user and 'ally' not in self.targets and 'enemy' not in self.targets:
+            # print('{} is not the user.'.format(char.name))
             return False
         return True
 
@@ -295,6 +299,7 @@ class Ability:
         # targets = []
         # for char in participants:
         targets = [char for char in participants if self.canHit(user, locus, char, radius)]
+        # print('Targeting {!s}'.format(targets))
         return targets
 
     def execute(self, user, participants, targets=None, locus=None, items=None):
@@ -326,7 +331,7 @@ class Ability:
                 targets = list(map(itemgetter(1), candidates))
             log += 'Targets: {!s}\n'.format(targets)
         elif 'location' in self.targets and locus is not None:
-            if user.distanceTo(locus.coords()) <= self.range:
+            if user.distanceTo(locus) <= self.range:
                 targets = self.getAllTargetsInRange(user, participants, locus, self.limit)
                 shuffle(targets)
             else:

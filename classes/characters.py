@@ -296,7 +296,7 @@ Minion: {!s}""".format(self.username, self.userid, self.name, self.race, int(sel
         return out
 
     def distanceTo(self, pos):
-        return distance(pos, self.pos)
+        return abs(Vector(self.pos) - Vector(pos))
 
     # Will be fancier once abilities are in
     def canMelee(self, pos):

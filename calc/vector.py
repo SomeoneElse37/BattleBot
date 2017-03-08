@@ -60,7 +60,10 @@ class Vector:
     """ A wrapper class for my simple (x, y) pair vectors. """
 
     def __init__(self, coords):
-        self._coords = coords
+        if isinstance(coords, Vector):
+            self._coords = coords.coords    # This effectively makes Vector(anotherVector) a copy constructor
+        else:
+            self._coords = coords
 
     @property
     def coords(self):
