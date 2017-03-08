@@ -87,6 +87,9 @@ class Ability:
     def revoke(self):
         self.timeout = -1
 
+    def verbRevoked(self):
+        return 'Silenced'
+
     def tick(self):
         if self.timeout > 0:
             self.timeout -= 1
@@ -241,10 +244,11 @@ class Ability:
                     tgt = item.getHolder()
                 else:
                     tgt = user
-                if step[1] == 'damage':     #TODO: Remember to go and make 'damage target' in modifier/ability abilities turn into 'extend target'
-                    tgt.health -= result
+                if step[1] == 'damage':
+                    dmg = int(result)
+                    tgt.health -= dmg
                     tgt.health = max(tgt.health, 0)
-                    log += '\nDealt {:d} damage. {} is now at {:d} health.'.format(result, tgt.name, tgt.health)
+                    log += '\nDealt {:d} damage. {} is now at {:d} health.'.format(dmg, tgt.name, tgt.health)
                 elif step[1] == 'apply':
                     mod = Modifier(result, owner=user, holder=tgt)
                     log += '\n{} gets {} for {:d} turns.'.format(tgt.name, mod.short(), mod.duration)
@@ -252,7 +256,7 @@ class Ability:
                     name = repr(tgt)
                     log += "\nExtended duration or cooldown of {} to {:d} turns.".format(name, tgt.extend(result))
                 elif step[1] == 'cancel':
-                    log += "\nCancelled {!r}.".format(tgt)
+                    log += "\n{} {!r}.".format(tgt.verbRevoked(), tgt)
                     tgt.revoke()
         return log
 
@@ -299,6 +303,8 @@ class Ability:
         if self.timeout < 0:
             raise ValueError('This ability is silenced.')
         log = ''
+        if locus is not None:
+            locus = Vector(locus)
         if 'random' in self.targets:
             # print('Executing randomly-targeted ability.')
             candidates = self.getAllTargetsInRange(user, participants, user.pos, self.range)
@@ -320,7 +326,7 @@ class Ability:
                 targets = list(map(itemgetter(1), candidates))
             log += 'Targets: {!s}\n'.format(targets)
         elif 'location' in self.targets and locus is not None:
-            if user.distanceTo(locus) <= self.range:
+            if user.distanceTo(locus.coords()) <= self.range:
                 targets = self.getAllTargetsInRange(user, participants, locus, self.limit)
                 shuffle(targets)
             else:
