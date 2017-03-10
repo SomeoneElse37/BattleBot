@@ -36,6 +36,7 @@ token = results["token"]
 db = results["db"]
 results = None #we don't need it anymore. Though it isn't like we clear a lot of RAM with it, its better then nothing
 generateExcel = True
+allowRaceFallBackToHuman=True
 
 if len(argv) >= 1 and argv[-1].lower() == 'fixminions':
     print('Marking all characters as non-minions.')
@@ -318,9 +319,14 @@ def stats(codex):
     return out
 
 def makeChar(codex, author):
+    extraText=""
     char = Character(author, codex[0], codex[1].lower(), makeStatsFromCodex(codex[2:]))
+    if char.usedFallBack:
+        if not allowRaceFallBackToHuman:
+            raise ValueError("not a valid race")
+        extraText = "Race "+codex[1]+ " did not exist, falling back to human \n"
     db.insertCharacter(author.server,char)
-    return str(char) + '\n\n{:d} stat points used.'.format(sum(char.statPoints.values()))
+    return extraText+(str(char) + '\n\n{:d} stat points used.'.format(sum(char.statPoints.values())))
 
 def clearBattle(codex, author):
     if author.server_permissions.administrator or author.server_permissions.manage_messages:

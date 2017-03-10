@@ -54,17 +54,23 @@ class Character:
 
     # Attributes: username, userid, name, race, size, statPoints, baseStats, abilities, modifiers, health, location, secret
     def __init__(self, owner, name, race, statpoints, secret=False):
+        self.usedFallBack=False
         if not race in Character.sizeTiers:
-            raise ValueError("Invalid race.")
+            self.usedFallBack = True
+            
         if owner is not None:
             self.mention = owner.mention
             self.username = owner.display_name
             self.userid = owner.id
         self.name = name
         self.race = race.lower()
-        self.size = Character.sizeTiers[self.race]
+        if self.usedFallBack:
+            self.size=2
+            self.baseStats = Character.baseStats["human"]
+        else:
+            self.size = Character.sizeTiers[self.race]
+            self.baseStats = Character.baseStats[self.race]
         self.statPoints = statpoints
-        self.baseStats = Character.baseStats[self.race]
         # Modifiers are stored in this dictionary.
         # The keys are the same as in all the various stat dictionaries. HP, ACC, EVA, etc.
         # Each value is a pair of lists. The first element in each pair is a list of multiplicative modifiers (e.g. 120% STR for 2 turns);
@@ -83,7 +89,6 @@ class Character:
         self.minionCount = 0    # this tracks how often a minion has been made using this character as its base
         self.forceTurnSkip = False  # this can be used to forcefully skip characters
         self.attackRange = 1    # At what distance can the character perform a basic attack (effective minimum is 1.5, disregarding this value)
-
     # Constructs a deep copy of this Character and all its attributes, except the modifiers.
     # NOTE: When adding attributes to Character, BE SURE to add them here as well!
     def copy(self, newName=None):
@@ -205,11 +210,24 @@ Size Tier: {:d}
 Stat Points: [{:s}]
 Current Stats: [{:s}]
 Abilities: {!s}
-Reach: {:d}
+Reach: {:f}
 Location: ({:d}, {:d})
 Health: {:d}
-Minion: {!s}""".format(self.username, self.userid, self.name, self.race, int(self.size), s1, s2, list(self.abilities.values()), \
-        max(int(self.attackRange), 1.5), int(self.pos[0]), int(self.pos[1]), int(self.health), self.isMinion)
+Minion: {!s}""".format(
+    self.username, 
+    self.userid, 
+    self.name, 
+    self.race, 
+    int(self.size), 
+    s1,
+    s2,
+    list(self.abilities.values()), 
+    max(int(self.attackRange), 1.5),
+    int(self.pos[0]),
+    int(self.pos[1]),
+    int(self.health),
+    self.isMinion
+)
 
     # Reset health to the maximum, and clear all modifiers.
     def respawn(self):
