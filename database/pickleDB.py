@@ -37,6 +37,8 @@ def _updateDBFormat(database):
                             x.owner = w
                         if x.targets.isdisjoint({'self', 'ally', 'enemy'}):
                             x.targets.update({'self', 'ally', 'enemy'})
+                        if not hasattr(x, 'isInUse'):
+                            x.isInUse = False
         database['version'] = _CURRENT_DB_VERSION
 
 class Database:

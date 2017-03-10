@@ -1,5 +1,5 @@
 import math
-from random import randint, gauss, shuffle
+from random import randint, gauss, shuffle, choice
 
 from calc.dice import *
 from calc.vector import *
@@ -310,6 +310,13 @@ Minion: {!s}""".format(self.username, self.userid, self.name, self.race, int(sel
 
     def createAbility(self, codex):
         self.abilities[codex[0].lower()] = Ability(codex)
+
+    def getReaction(self):
+        reactions = [abl for abl in self.abilities.values() if not abl.isInUse]
+        if len(reactions) == 0:
+            return None
+        else:
+            return choice(reactions)
 
     def __eq__(self, other):
         return self.userid == other.userid and self.name == other.name

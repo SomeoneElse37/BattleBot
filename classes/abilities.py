@@ -56,6 +56,7 @@ class Ability:
         self.steps = []
         self.flavor = ''
         self.owner = owner
+        self.isInUse = False
 
     # Creates a deep copy of the Ability object.
     # NOTE: When adding new attributes to an Ability, BE SURE to add them here!
@@ -205,7 +206,7 @@ class Ability:
             self.steps.append(self.parseStep(codex))
 
     # Step format: ("calc" var | "condition" cond | "effect" ("damage" | "apply") ("self" | "target")) \[ RPN commands ... \]
-    def executeInner(self, user, target=None, locus=None, item=None):
+    def executeInner(self, user, participants, target=None, locus=None, item=None, source=None):
         data = dict(self=user)
         if (target is None) == (item is None):
             raise RuntimeError("Mutually exclusive parameters 'target' and 'item' were either both specified or both None")
@@ -260,6 +261,20 @@ class Ability:
                     tgt.revoke()
         return log
 
+    def executeMiddle(self, user, participants, target=None, locus=None, item=None, source=None):
+        if (target is None) == (item is None):
+            raise RuntimeError("Mutually exclusive parameters 'target' and 'item' were either both specified or both None")
+        if source is None:
+            source = user
+        char = target if item is None else item.getHolder()
+        reaction = chat.getReaction()
+        if reaction is None:
+            return self.executeInner(user, participants, target, locus, item, source)
+        else:
+            log = "Intercepted by {}'s {!r}!\n".format(char.name, reaction)
+            log += reaction.execute(char, participants, locus=locus, source=source)
+            return log + '\nEnd {!r}.'.format(reaction)
+
     def calcWeights(self, user, candidates):
         weights = []
         # print('Candidates: {!s}'.format(candidates))
@@ -302,11 +317,12 @@ class Ability:
         # print('Targeting {!s}'.format(targets))
         return targets
 
-    def execute(self, user, participants, targets=None, locus=None, items=None):
+    def execute(self, user, participants, targets=None, locus=None, items=None, source=None):
         if self.timeout > 0:
             raise ValueError('This ability is on cooldown for {:d} more turns.'.format(self.timeout))
         if self.timeout < 0:
             raise ValueError('This ability is silenced.')
+        self.isInUse = True
         log = ''
         if locus is not None:
             locus = Vector(locus)
@@ -351,14 +367,15 @@ class Ability:
                 raise ValueError('Too many targets. Requires {:d} or less; got {:d}.'.format(self.limit, len(targets)))
         if 'ability' in self.targets or 'modifier' in self.targets:
             for item in items:
-                nextLog = self.executeInner(user, item=item, locus=locus)
+                nextLog = self.executeMiddle(user, participants, item=item, locus=locus, source=source)
                 log += '\n\n' + nextLog
         else:
             for char in targets:
-                nextLog = self.executeInner(user, target=char, locus=locus)
+                nextLog = self.executeMiddle(user, participants, target=char, locus=locus, source=source)
                 log += '\n\n' + nextLog
         self.timeout = self.cooldown + 1
         # print(log)
+        self.isInUse = False
         return log
 
     def __str__(self):
