@@ -428,6 +428,8 @@ These commands/behaviors only function if you are a GM, meaning that you have ei
 /gmattack name acc atk [secret?]: Perform at attack with the given Accuracy and Attack against the named character.
     If 0 or a negative number is specified for acc or atk, those stats will not be rolled.
     If anything at all is given for the fourth parameter, the bot will not echo the Accuracy or Attack specified.
+/gmability name ablName [as user] [targets]: Activate a character's ability without affecting cooldowns,
+    optionally as if a different character had used it.
 /setsize x y: Set the size of the battlefield to (x, y).
 /excel: Generate an ODF spreadsheet. Experimental.
 /makeMinion name: Clone the character as a minion.

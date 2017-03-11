@@ -273,57 +273,67 @@ class Battle:
             self.passTurn()
         return out
 
+    def useAbilityOf(self, char, abilityName, codex, user=None, ignoreTimeout=False):
+        if user is None:
+            user = char
+        ability = char.abilities[abilityName.lower()]
+        prevTimeout = ability.timeout
+        out = ''
+        prevDeadChars = {ch for ch in self.participants if ch.isDead()}
+        if 'reaction' in ability.targets:
+            raise ValueError("This is a reaction. You can't just activate it anytime.")
+        elif 'random' in ability.targets:
+            out += ability.execute(user, self.participants)
+        elif 'location' in ability.targets:
+            path, maxDist, stop = self.parseDirectionList(user.pos, codex)
+            out, locus = user.testMove(path, maxDist, stop, self.size, True)
+            out += ability.execute(user, self.participants, locus=locus)
+        else:
+            if len(codex) == 0:     # No targets given
+                if 'ability' in ability.targets or 'modifier' in ability.targets:
+                    raise ValueError('No targets given for a modifier- or ability-targeting ability.')
+                if 'self' not in ability.targets:
+                    raise ValueError('No targets given for an ability that cannot target its user.')
+                out = ability.execute(user, self.participants, targets=[user])
+            else:
+                targets = []
+                items = []
+                i = 0
+                while i < len(codex):
+                    name = codex[i]
+                    char = self.characters[name.lower()]
+                    i += 1
+                    if char is user:
+                        if 'self' not in ability.targets:
+                            raise ValueError('You cannot target yourself with this ability.')
+                    else:
+                        if 'ally' not in ability.targets and 'enemy' not in ability.targets:     # BattleBot has no way to know who is an ally and who is an enemy (yet)
+                            raise ValueError('You cannot target {} with this ability.'.format(char.name))
+                    targets.append(char)
+                    if 'ability' in ability.targets:
+                        if codex[i].lower() in char.abilities:
+                            items.append(char.abilities[codex[i].lower()])
+                            i += 1
+                        else:
+                            items.append(choice(char.abilities))
+                out = ability.execute(user, self.participants, targets=_removeDups(targets), items=_removeDups(items))
+        for ch in self.participants:
+            if ch.isDead() and ch not in prevDeadChars:
+                self.onDeath(ch)
+                #self.removeParticipantByChar(ch)
+                #ch.respawn()
+        if ignoreTimeout:
+            ability.timeout = prevTimeout
+        return out
+
     def useAbility(self, codex):
         if self.attacked:
             return self.availableActions()
         user = self.currentChar()
-        ability = user.abilities[codex[0].lower()]
+        abilityName = codex[0].lower()
         codex = codex[1:]
-        out = ''
-        prevDeadChars = {ch for ch in self.participants if ch.isDead()}
         try:
-            if 'reaction' in ability.targets:
-                raise ValueError("This is a reaction. You can't just activate it anytime.")
-            elif 'random' in ability.targets:
-                out += ability.execute(user, self.participants)
-            elif 'location' in ability.targets:
-                path, maxDist, stop = self.parseDirectionList(user.pos, codex)
-                out, locus = user.testMove(path, maxDist, stop, self.size, True)
-                out += ability.execute(user, self.participants, locus=locus)
-            else:
-                if len(codex) == 0:     # No targets given
-                    if 'ability' in ability.targets or 'modifier' in ability.targets:
-                        raise ValueError('No targets given for a modifier- or ability-targeting ability.')
-                    if 'self' not in ability.targets:
-                        raise ValueError('No targets given for an ability that cannot target its user.')
-                    out = ability.execute(user, self.participants, targets=[user])
-                else:
-                    targets = []
-                    items = []
-                    i = 0
-                    while i < len(codex):
-                        name = codex[i]
-                        char = self.characters[name.lower()]
-                        i += 1
-                        if char is user:
-                            if 'self' not in ability.targets:
-                                raise ValueError('You cannot target yourself with this ability.')
-                        else:
-                            if 'ally' not in ability.targets and 'enemy' not in ability.targets:     # BattleBot has no way to know who is an ally and who is an enemy (yet)
-                                raise ValueError('You cannot target {} with this ability.'.format(char.name))
-                        targets.append(char)
-                        if 'ability' in ability.targets:
-                            if codex[i].lower() in char.abilities:
-                                items.append(char.abilities[codex[i].lower()])
-                                i += 1
-                            else:
-                                items.append(choice(char.abilities))
-                    out = ability.execute(user, self.participants, targets=_removeDups(targets), items=_removeDups(items))
-            for char in self.participants:
-                if char.isDead() and char not in prevDeadChars:
-                    self.onDeath(char)
-                    #self.removeParticipantByChar(char)
-                    #char.respawn()
+            out = self.useAbilityOf(user, abilityName, codex)
             self.attacked = True
             out += self.availableActions()
             if self.moved:
@@ -331,7 +341,7 @@ class Battle:
         except ValueError as e:
             return str(e)
         except KeyError as e:
-            return 'Character not found: {}'.format(e.args[0])
+            return 'Character/ability not found: {}'.format(e.args[0])
         return out
 
     def genMap(self, corner1, corner2, scale=1):
