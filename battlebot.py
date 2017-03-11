@@ -653,6 +653,16 @@ def gm_attack(codex, author):
     else:
         return "You need Manage Messages or Administrator permission to perform GM attacks!"
 
+def gm_ability(codex, author):
+    #battle = database[author.server.id]
+    #char = battle.characters[codex[0].lower()]
+    char =  db.getCharacter(author.server.id, codex[0].lower())
+    if author.server_permissions.administrator or author.server_permissions.manage_messages:
+        abl = char.abilities[codex[1].lower()]
+        
+    else:
+        return "You need Manage Messages or Administrator permission to perform GM ability-activations!"
+
 def setSize(codex, author):
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
         return db.updateSize(author.server.id, int(codex[0]), int(codex[1]))
@@ -796,6 +806,8 @@ def getReply(content, message):
             return toggleSecret(codex[1:], message.author)
         elif codex[0] == 'gmattack':
             return gm_attack(codex[1:], message.author)
+        elif codex[0] == 'gmability':
+            return gm_ability(codex[1:], message.author)
         elif codex[0] == 'setsize':
             return setSize(codex[1:], message.author)
         elif codex[0] == 'github':
