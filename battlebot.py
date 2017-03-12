@@ -655,7 +655,7 @@ def gm_attack(codex, author):
         return "You need Manage Messages or Administrator permission to perform GM attacks!"
 
 def gm_ability(codex, author):
-    char = db.getBattle(author.server.id)
+    battle = db.getBattle(author.server.id)
     char = db.getCharacter(author.server.id, codex[0].lower())
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
         ablName = codex[1]
