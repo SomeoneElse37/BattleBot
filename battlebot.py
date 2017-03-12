@@ -346,6 +346,7 @@ def charData(codex, author):
     char = db.getCharacter(author.server.id, codex[0])
     if char.userid == author.id:
         char.username = author.display_name
+        char.mention = author.mention
     return str(char)
 
 def info(codex, author):

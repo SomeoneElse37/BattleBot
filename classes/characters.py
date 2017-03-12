@@ -51,25 +51,22 @@ class Character:
                         m.revoke()
         self.modifiers = dict(HP=([], []), ACC=([], []), EVA=([], []), ATK=([], []), DEF=([], []), SPD=([], []))
 
-
     # Attributes: username, userid, name, race, size, statPoints, baseStats, abilities, modifiers, health, location, secret
     def __init__(self, owner, name, race, statpoints, secret=False):
-        self.usedFallBack=False
-        if not race in Character.sizeTiers:
-            self.usedFallBack = True
-            
         if owner is not None:
             self.mention = owner.mention
             self.username = owner.display_name
             self.userid = owner.id
         self.name = name
         self.race = race.lower()
-        if self.usedFallBack:
-            self.size=2
+        if race not in Character.sizeTiers:
+            self.size = 2
             self.baseStats = Character.baseStats["human"]
+            self.usedFallBack = True
         else:
             self.size = Character.sizeTiers[self.race]
             self.baseStats = Character.baseStats[self.race]
+            self.usedFallBack = False
         self.statPoints = statpoints
         # Modifiers are stored in this dictionary.
         # The keys are the same as in all the various stat dictionaries. HP, ACC, EVA, etc.
@@ -89,6 +86,7 @@ class Character:
         self.minionCount = 0    # this tracks how often a minion has been made using this character as its base
         self.forceTurnSkip = False  # this can be used to forcefully skip characters
         self.attackRange = 1    # At what distance can the character perform a basic attack (effective minimum is 1.5, disregarding this value)
+
     # Constructs a deep copy of this Character and all its attributes, except the modifiers.
     # NOTE: When adding attributes to Character, BE SURE to add them here as well!
     def copy(self, newName=None):
@@ -97,7 +95,7 @@ class Character:
             newName = self.name
             changedName = True
         new = Character(None, newName, self.race, self.statPoints.copy(), self.secret)
-        for attrib in ['mention', 'username', 'userid', 'health', 'pos', 'ephemeral', 'isMinion', 'minionCount', 'forceTurnSkip']:
+        for attrib in ['mention', 'username', 'userid', 'health', 'pos', 'ephemeral', 'isMinion', 'minionCount', 'forceTurnSkip', 'attackRange']:
             setattr(new, attrib, getattr(self, attrib))
         for k, v in self.abilities.items():
             new.abilities[k] = v.copy(newOwner=new)

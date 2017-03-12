@@ -3,7 +3,7 @@ from classes.abilities import Ability
 
 #This file contains everything to interact with the pickle version of the database
 
-_CURRENT_DB_VERSION = 21
+_CURRENT_DB_VERSION = 22
 
 def _updateDBFormat(database):
     if 'version' not in database or database['version'] < _CURRENT_DB_VERSION:
@@ -31,6 +31,8 @@ def _updateDBFormat(database):
                         w.forceTurnSkip = False
                     if not hasattr(w, 'attackRange'):
                         w.attackRange = 1
+                    if not hasattr(w, 'usedFallBack'):
+                        w.usedFallBack = False
                     for m, x in w.abilities.items():
                         # Ability attributes: name, range, cooldown, timeout, targets, limit, steps, flavor
                         if not hasattr(x, 'owner'):
