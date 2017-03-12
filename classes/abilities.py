@@ -4,6 +4,8 @@ from random import uniform, shuffle
 from calc.vector import *
 from calc.rpn import *
 
+from classes.modifiers import *
+
 def _pickAndRemove(candidates, n, weight):
     # print('Candidates: {!s}'.format(candidates))
     # print('Total Weight: {}'.format(weight))
@@ -267,7 +269,7 @@ class Ability:
         if source is None:
             source = user
         char = target if item is None else item.getHolder()
-        reaction = chat.getReaction()
+        reaction = char.getReaction()
         if reaction is None:
             return self.executeInner(user, participants, target, locus, item, source)
         else:

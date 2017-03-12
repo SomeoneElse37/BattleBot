@@ -270,6 +270,7 @@ Want to host BattleBot yourself, look at the sourcecode, or file a bug report? T
 /help ability: Deailed information on abilities and how to create them
 /help rpn: Crash course on Reverse Polish Notation
 /help gm: Commands for GMs
+/help gm2: More commands for GMs
 /help calc: Commands that roll dice and calculate stuff. Mostly obsoleted by all the above.
 
 **Note: Many of these help pages are quite long. Please do not use them outside of your server's designated spam channel, or the GM (and the other players) will be very annoyed with you.**""",
@@ -408,7 +409,7 @@ Also, modifiers instantly vanish the moment their owner dies. Because otherwise,
 Unless they have no owner, which is also possible to do.""",
         'ability': _ability,
         'rpn': _rpn,
-        'gm': """GM commands
+        'gm': """GM Commands
 These commands/behaviors only function if you are a GM, meaning that you have either Administrator or Manage Messages permission on the server.
 
 /pass, /attack, /delete, etc: GMs can use these commands to control or mess with other players' characters.
@@ -424,6 +425,10 @@ These commands/behaviors only function if you are a GM, meaning that you have ei
     Acceptable stats are HP, ACC, EVA, ATK, DEF, and SPD. All are case-insensitive.
 /warp name x y: Teleports the named character to the given coordinates.
 /sethp name [health]: Sets the named character's current health, or to their maximum health is none is specified.
+
+See /help gm2 for more""",
+        'gm2': """More GM Commands
+
 /togglesecret name: Toggle whether the named character's stats are hidden from players.
 /gmattack name acc atk [secret?]: Perform at attack with the given Accuracy and Attack against the named character.
     If 0 or a negative number is specified for acc or atk, those stats will not be rolled.

@@ -2,7 +2,7 @@ class Modifier:
     """Represents a modifier, and stores all the data needed for one."""
 
     def getHolderMods(self):
-        print(self.holder.modifiers)
+        # print(self.holder.modifiers)
         pair = self.holder.modifiers[self.stat]
         return pair[0 if self.isMult else 1]
 
@@ -20,7 +20,7 @@ class Modifier:
 
     def __init__(self, stat, factor=None, duration=None, isMult=None, holder=None, owner=None):
         if factor is None and duration is None and isMult is None:
-            print('The stat tuple is (in stat-factor-duration-isMult order): ' + str(stat))
+            # print('The stat tuple is (in stat-factor-duration-isMult order): ' + str(stat))
             stat, factor, duration, isMult = stat   # Permit the first argument to be a tuple containing (stat, factor, duration, isMult), and ignoring the rest
         self.stat = stat.upper()
         self.factor = factor

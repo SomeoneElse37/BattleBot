@@ -665,7 +665,7 @@ def gm_ability(codex, author):
             codex = codex[2:]
         else:
             user = None
-        return battle.useAbilityOf(self, char, ablName, codex, user=user, ignoreTimeout=True)
+        return battle.useAbilityOf(char, ablName, codex, user=user, ignoreTimeout=True)
     else:
         return "You need Manage Messages or Administrator permission to perform GM ability-activations!"
 

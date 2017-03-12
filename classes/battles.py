@@ -278,8 +278,10 @@ class Battle:
             user = char
         ability = char.abilities[abilityName.lower()]
         prevTimeout = ability.timeout
+        if ignoreTimeout:
+            ability.timeout = 0
         out = ''
-        prevDeadChars = {ch for ch in self.participants if ch.isDead()}
+        prevDeadChars = [ch for ch in self.participants if ch.isDead()]
         if 'reaction' in ability.targets:
             raise ValueError("This is a reaction. You can't just activate it anytime.")
         elif 'random' in ability.targets:
