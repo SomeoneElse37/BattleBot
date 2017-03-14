@@ -496,7 +496,7 @@ def restat(codex, author):
     #char = battle.characters[codex[0].lower()]
     isGM = author.server_permissions.administrator or author.server_permissions.manage_messages
     if author.id == char.userid or isGM:
-        result = db.updateStats(author.server.id, codex[0].lower(), makeStatsFromCodex[codex[1:]], isGM)
+        result = db.updateStats(author.server.id, codex[0].lower(), makeStatsFromCodex(codex[1:]), isGM)
         if result:
             return result
         return "You need Manage Messages or Administrator permission to restat your characters during a battle!"
