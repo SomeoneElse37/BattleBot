@@ -118,7 +118,7 @@ class Ability:
         if codex[0] == 'calc':
             out = codex[:2]
             codex = codex[2:]
-        elif codex[1] == '=':
+        elif len(codex) > 1 and codex[1] == '=':
             out = ['calc', codex[0]]
             codex = codex[2:]
         elif codex[0] == 'condition':
