@@ -362,9 +362,10 @@ class Battle:
                 chars = []
                 for char in self.participants:
                     if char.inBox(x - scale + 1, x, y, y + scale - 1):
-                        chars.append(char.name)
+                        chars.append(char)
                         if tile == '  ':
-                            tile = '{:2s}'.format(char.name[0:2])
+                            abbrev = char.name[0:2] if not char.isMinion else char.name[-2:]
+                            tile = '{:2s}'.format(abbrev)
                         elif not isNumericTile:
                             tile = '{:02d}'.format(repeats)
                             isNumericTile = True
