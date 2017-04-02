@@ -117,7 +117,11 @@ class Character:
         return newMinion
 
     def isDead(self):
-        return self.health <= 0
+        try:
+            return self.health <= 0
+        except TypeError:
+            self.health = int(self.health)
+            return self.health <= 0
 
     # # (stat, factor, duration, isMult)
     # def createModifier(self, theTuple):
@@ -212,14 +216,14 @@ Reach: {:f}
 Location: ({:d}, {:d})
 Health: {:d}
 Minion: {!s}""".format(
-    self.username, 
-    self.userid, 
-    self.name, 
-    self.race, 
-    int(self.size), 
+    self.username,
+    self.userid,
+    self.name,
+    self.race,
+    int(self.size),
     s1,
     s2,
-    list(self.abilities.values()), 
+    list(self.abilities.values()),
     max(int(self.attackRange), 1.5),
     int(self.pos[0]),
     int(self.pos[1]),
