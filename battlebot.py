@@ -848,5 +848,6 @@ try:
     client.run(token)  # Blocking call; execution will not continue until client.run() returns
 finally:
     db.exitDB()
+    logging.shutdown()
 
 #client.connect()
