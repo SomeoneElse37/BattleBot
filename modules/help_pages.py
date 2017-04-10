@@ -132,13 +132,13 @@ All operators are case-insensitive. calcdmg, CALCDMG, and caLCdmG all work just 
         'number': """Numerical Operators
 
 First, the basics. These operators all pop two numbers off the stack, and push their result back on.
-+ : Addition. Pretty simple.
-- : Subtraction. Note that the second number popped is the number the other is subtracted *from*- so "5 1 -" means the same thing as "5 - 1" equals 4. Not -4.
+`+ `: Addition. Pretty simple.
+`- `: Subtraction. Note that the second number popped is the number the other is subtracted *from*- so "5 1 -" means the same thing as "5 - 1" equals 4. Not -4.
         All the operators that take multiple arguments work this way. The first number pushed goes on the left hand side of the operator.
-* : Multiplies the two numbers. Simple.
-**: Exponentiation. "5 2 **" returns 25, because 5 * 5 = 25.
-/ : Division. May return a floating-point number: "5 2 /" evaluates to 2.5.
-//: Floor division. Divides, then rounds down (i.e. toward -infinity). "5 2 //" evaluates to 2.
+`* `: Multiplies the two numbers. Simple.
+`**`: Exponentiation. "5 2 **" returns 25, because 5 * 5 = 25.
+`/ `: Division. May return a floating-point number: "5 2 /" evaluates to 2.5.
+`//`: Floor division. Divides, then rounds down (i.e. toward -infinity). "5 2 //" evaluates to 2.
 min: Returns the smaller of its two arguments.
 max: Returns the larger of its two arguments.
 
