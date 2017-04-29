@@ -224,7 +224,7 @@ Minion: {!s}""".format(self.username, self.userid, self.name, self.race, int(sel
         if self.dfn() < 4:
             note += '\n**Warning! Your DEF is less than 4! You are at serious risk of taking massive amounts of damage!**'
         if len(note) > 0:
-            out += '\n{}\nUse /restat {} *hp acc eva atk dfn spd* to adjust your stats.'
+            out += '\n{}\nUse /restat {} *hp acc eva atk dfn spd* to adjust your stats.'.format(note, self.name)
         return out
 
     # Reset health to the maximum, and clear all modifiers.
