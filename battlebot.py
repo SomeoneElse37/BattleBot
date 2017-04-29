@@ -668,7 +668,39 @@ def gm_ability(codex, author):
         return battle.useAbilityOf(char, ablName, codex, user=user, ignoreTimeout=True)
     else:
         return "You need Manage Messages or Administrator permission to perform GM ability-activations!"
+def addMark(codex,author):
+    if len(codex)==1:
+        codex.append(0)
+    currentRound = db.getCurrentRound(author.server.id) 
+    codex[1] = currentRound + int(codex[1])
+    db.addMark(author.server.id,codex[0],int(codex[1]))
+    return "Mark " + str(codex[0]) + " is set for round " + str(codex[1]) +" and it is currently round " + str(currentRound)
 
+def showMarks(codex,author):
+    marks     = db.getMarks(author.server.id)
+    currRound = db.getCurrentRound(author.server.id)
+    text = "It is currently round "+str(currRound)
+    if len(marks)==0:
+        return text + "\n there are currently no marks"
+    for key in range(len(marks)):
+        mark = marks[key]
+        text= text+"\n "+str(key)+" **"+marks[key]['name']+"**"
+        if mark['turn']< currRound:
+            happenedAt = str(currRound-mark['turn'])
+            text = text +" has happened **"+happenedAt +"** rounds from now"
+        elif mark['turn']>currRound:
+            willHappen = str(mark['turn']-currRound)
+            text=text+" will happen **"+willHappen +"** rounds from now"
+        else:
+            text=text+" will happen right now!"
+    return text
+
+def removeMark(codex,author):
+     if author.server_permissions.administrator or author.server_permissions.manage_messages:
+        db.removeMark(author.server.id,codex[0])
+        return showMarks(codex,author)
+     else:
+         return "You need Manage Messages or Administrator permission to remove marks!"
 def setSize(codex, author):
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
         return db.updateSize(author.server.id, int(codex[0]), int(codex[1]))
@@ -827,6 +859,12 @@ def getReply(content, message):
             return makeMinion(codex[1:], message.author)
         elif codex[0] == "toggleTurnSkip":
             return toggleTurnSkip(codex[1:], message.author)
+        elif codex[0] == "addMark":
+            return addMark(codex[1:], message.author)
+        elif codex[0] == "showMarks":
+            return showMarks(codex[1:],message.author)
+        elif codex[0] == "removeMark":
+            return removeMark(codex[1:],message.author)
     return ""
 
 @client.event

@@ -30,7 +30,8 @@ class Battle:
         self.size = (2048, 2048)
         self.moved = False      # True if the current character has /moved during their turn
         self.attacked = False   # True if the current character has /attacked or used an /ability during their turn
-
+        self.marks=[] #this stores various marks in the battle. Can be used as reminders for when stuff will happens or has happened
+        self.atRound=0 #At which round we are currently. Used by the mark system
     def addCharacter(self, char):
         if char.name.lower() not in self.characters:
             self.characters[char.name.lower()] = char
@@ -47,6 +48,8 @@ class Battle:
         for k in remove: del self.characters[k]
         self.participants = []
         self.turn = -1
+        self.atRound=1
+        self.marks=[]
 
     # Warning: May give undefined behavior if char is not already in the characters dictionary
     def addParticipantByChar(self, char):
@@ -152,6 +155,7 @@ class Battle:
                 self.turn += 1
             if self.turn >= len(self.participants):
                 self.turn = 0
+                self.atRound +=1
             # print(self.turn)
             # print(self.currentChar())
             try:
