@@ -161,7 +161,7 @@ class Character:
         return total
 
     def calcStat(self, stat):
-        return int(self.baseStats[stat] * (1 + self.statPoints[stat] / 8) * self.multModifiers(stat) + self.addModifiers(stat))
+        return int(self.baseStats[stat] * (self.statPoints[stat] / 8) * self.multModifiers(stat) + self.addModifiers(stat))
 
     # Returns the characters hp STAT, i.e. their MAXIMUM health, NOT their current health. Use the self.health attribute for that.
     def hp(self):
