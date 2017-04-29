@@ -373,17 +373,14 @@ Species Stats: The "base" stats shared by all members of a species. Currently, t
 Stat Points: These are specific to each individual. Players are given a GM-specified number
     of these to distribute across their six stats as they choose.
 Unmodified Stats: The results of combining the Species Stats and Stat points, calculated as
-    UnmodifiedStat = SpeciesStat \* (1 + (StatPoints / 8)). See below.
+    UnmodifiedStat = SpeciesStat \* (StatPoints / 8). See below.
 Effective Stats: The result of applying modifiers to the Unmodified Stats. See /help modifier for details.
 
-Each point allocated to a stat increases the unmodified stat from the base species stat by *one eighth of that species stat*.
+Unmodified stats start at 0, and increase by 1/8 of the corresponding species stat for each stat point applied.
 
-For instance, werecats have 16 species HP. A werecat with 0 points allocated to HP will have, well, 16 HP.
-    No points allocated = no change in the stat.
-A werecat with one point in HP will have 16 \* (1 + 1 / 8) = 18 HP.
-A werecat with 4 points in HP will have 16 \* (1 + 4 / 8) = 24 HP.
-
-Allocating 4 points will multiply the species stat by 1.5, and allocating 8 points will double it. It's pretty linear.""",
+NOTE: If you do not allocate any points in HP, you will have 0 HP. You'll die instantly as soon as the battle begins.
+If your DEF is very low, you put yourself at a serious risk of taking massive amounts of damage from any hit.
+For these reasons, the bot will warn you if your unmodified HP is less than 1 or your unmodified DEF is less than 4.""",
         'modifier': """Modifiers
 
 Battlebot supports modifiers to stats, of the multiplicative and additive varieties.
