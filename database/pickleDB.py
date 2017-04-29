@@ -103,7 +103,7 @@ class Database:
 
     def updateHealth(self, serverId, charName, newHealth):
         char = self.getCharacter(serverId, charName)
-        char.health = newHealth
+        char.health = int(newHealth)
         return char
 
     def respawnChar(self, serverId, charName):
