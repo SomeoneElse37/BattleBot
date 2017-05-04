@@ -200,6 +200,13 @@ class Character:
         for a in self.abilities.values():
             a.timeout = 0
 
+    def getAutoAbilities(self):
+        out = []
+        for a in self.abilities.values():
+            if 'auto' in a.targets:
+                out.append(a)
+        return out
+
     def __str__(self):
         s1 = '...'
         s2 = '...'

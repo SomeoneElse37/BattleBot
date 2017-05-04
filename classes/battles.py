@@ -160,8 +160,13 @@ class Battle:
             # print(self.currentChar())
             try:
                 currentChar = self.currentChar()
-                if not currentChar.isDead() and not currentChar.forceTurnSkip:
-                    break
+                if currentChar.isDead():
+                    continue
+                for abl in currentChar.getAutoAbilities():
+                    abl.execute(currentChar, self.participants, targets=[currentChar], locus=currentChar.pos)
+                if currentChar.forceTurnSkip:
+                    continue
+                break
             except AttributeError:
                 break
 
@@ -288,6 +293,8 @@ class Battle:
         prevDeadChars = [ch for ch in self.participants if ch.isDead()]
         if 'reaction' in ability.targets:
             raise ValueError("This is a reaction. You can't just activate it anytime.")
+        if 'auto' in ability.targets:
+            raise ValueError("This is an automatic ability. It'll activate automatically at the end of your turn.")
         elif 'random' in ability.targets:
             out += ability.execute(user, self.participants)
         elif 'location' in ability.targets:

@@ -37,7 +37,7 @@ class Ability:
         self.targets = set()
         i = 2
         try:
-            while codex[i] in {'location', 'aoe', 'random', 'self', 'ally', 'enemy', 'corpse', 'ability', 'modifier', 'reaction'}:
+            while codex[i] in {'location', 'aoe', 'random', 'self', 'ally', 'enemy', 'corpse', 'ability', 'modifier', 'reaction', 'auto'}:
                 self.targets.add(codex[i])
                 i += 1
             self.limit = int(codex[-1])
@@ -48,6 +48,8 @@ class Ability:
             self.targets.add('location')
         if 'location' in self.targets and not self.targets.isdisjoint({'ability', 'modifier'}):
             raise ValueError('AoE abilities cannot target abilities or modifiers (yet). Until I figure out a good way to handle that. Any ideas?')
+        if 'auto' in self.targets and self.targets.isdisjoint({'self', 'random', 'location'}):
+            raise ValueError('Auto abilities cannot be targeted: they must have Location/AoE, Random, or Self.')
         if self.targets.isdisjoint({'self', 'ally', 'enemy'}):
             self.targets.update({'self', 'ally', 'enemy'})
 
@@ -68,7 +70,7 @@ class Ability:
         new = Ability(None, newOwner)
         for attrib in ['name', 'range', 'cooldown', 'timeout', 'limit', 'flavor']:
             setattr(new, attrib, getattr(self, attrib))
-        for attrib in ['targets']:
+        for attrib in ['targets']:      # Add attributes that need to be copied to this list
             setattr(new, attrib, getattr(self, attrib).copy())
         new.steps = []
         for step in self.steps:
