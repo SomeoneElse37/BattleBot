@@ -39,7 +39,8 @@ random: Chooses its targets at random from all characters in range, without requ
     to weight the random number generator. Larger weights are more likely to be chosen.
 reaction: This ability triggers in response to the user being targeted with another ability. Cannot be activated directly
     using /ability. May be used to redirect the ability to its source or to one or more other characters. Implies 'random'
-    and uses this ability's range, limit, and parameters to choose the new targets (if the ability is actually redirected).""",
+    and uses this ability's range, limit, and parameters to choose the new targets (if the ability is actually redirected).
+auto: Activates automatically at the end of the characters turns. Requires random, location, or self.""",
         'edit': """The /editability Command
 
 /editability name abilityName [N] action [:] rpn ...: Edits the sequence of steps that the ability performs for each target.
