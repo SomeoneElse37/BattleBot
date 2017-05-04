@@ -5,10 +5,10 @@ from calc.dice import *
 from calc.vector import *
 
 def makeStatDict(hp, acc, eva, atk, dfn, spd):
-        return dict(HP=hp, ACC=acc, EVA=eva, ATK=atk, DEF=dfn, SPD=spd)
+    return dict(HP=hp, ACC=acc, EVA=eva, ATK=atk, DEF=dfn, SPD=spd)
 
 def defaultStats(size):
-        return makeStatDict(2**(size * 2), 2**(-size + 5), 2**(-size + 5), 2**(size * 4 - 2), 2**(size * 2), 2**(size))
+    return makeStatDict(2**(size * 2), 2**(-size + 5), 2**(-size + 5), 2**(size * 4 - 2), 2**(size * 2), 2**(size))
 
 def statString(stats):
     return "HP: {:d}  Accuracy: {:d}  Evasion: {:d}  Attack: {:d}  Defense: {:d}  Speed: {:d}".format(stats['HP'], stats['ACC'], stats['EVA'], stats['ATK'], stats['DEF'], stats['SPD'])
@@ -17,30 +17,32 @@ class Character:
     """Represents a character known to BattleBot."""
 
     sizeTiers = {
-        'faerie': 1,
-        'elf': 2,
-        'human': 2,
-        'werecat': 2,
-        'elfcat': 2,
-        'cyborg': 2,
-        'robot': 2,
-        'kraken': 3,
-        'elfship': 3,
-        'steamship': 3
-        }
+            'crate': 0,
+            'faerie': 1,
+            'elf': 2,
+            'human': 2,
+            'werecat': 2,
+            'elfcat': 2,
+            'cyborg': 2,
+            'robot': 2,
+            'kraken': 3,
+            'elfship': 3,
+            'steamship': 3
+            }
 
     baseStats = {
-        'faerie': defaultStats(sizeTiers['faerie']),    # This sets the base stats for each species to the default, computed from their size.
-        'elf': defaultStats(sizeTiers['elf']),          # If Lens wants different base stats for any/all races, I can hardcode that easily.
-        'human': defaultStats(sizeTiers['human']),      # Allowing GMs to set that up per-server is doable, but would take a bit more work.
-        'werecat': defaultStats(sizeTiers['werecat']),
-        'elfcat': defaultStats(sizeTiers['elfcat']),
-        'cyborg': defaultStats(sizeTiers['cyborg']),
-        'robot': defaultStats(sizeTiers['robot']),
-        'kraken': defaultStats(sizeTiers['kraken']),
-        'elfship': defaultStats(sizeTiers['elfship']),
-        'steamship': defaultStats(sizeTiers['steamship']),
-        }
+            'crate': makeStatDict(1, 1, 1, 1, 1, 1),
+            'faerie': defaultStats(sizeTiers['faerie']),    # This sets the base stats for each species to the default, computed from their size.
+            'elf': defaultStats(sizeTiers['elf']),          # If Lens wants different base stats for any/all races, I can hardcode that easily.
+            'human': defaultStats(sizeTiers['human']),      # Allowing GMs to set that up per-server is doable, but would take a bit more work.
+            'werecat': defaultStats(sizeTiers['werecat']),
+            'elfcat': defaultStats(sizeTiers['elfcat']),
+            'cyborg': defaultStats(sizeTiers['cyborg']),
+            'robot': defaultStats(sizeTiers['robot']),
+            'kraken': defaultStats(sizeTiers['kraken']),
+            'elfship': defaultStats(sizeTiers['elfship']),
+            'steamship': defaultStats(sizeTiers['steamship']),
+            }
 
     def clearModifiers(self):
         if hasattr(self, 'modifiers'):
