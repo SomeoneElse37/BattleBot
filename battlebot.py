@@ -668,6 +668,7 @@ def gm_ability(codex, author):
         return battle.useAbilityOf(char, ablName, codex, user=user, ignoreTimeout=True)
     else:
         return "You need Manage Messages or Administrator permission to perform GM ability-activations!"
+
 def addMark(codex,author):
     if len(codex)==1:
         codex.append(0)
@@ -696,11 +697,12 @@ def showMarks(codex,author):
     return text
 
 def removeMark(codex,author):
-     if author.server_permissions.administrator or author.server_permissions.manage_messages:
+    if author.server_permissions.administrator or author.server_permissions.manage_messages:
         db.removeMark(author.server.id,codex[0])
         return showMarks(codex,author)
-     else:
-         return "You need Manage Messages or Administrator permission to remove marks!"
+    else:
+        return "You need Manage Messages or Administrator permission to remove marks!"
+
 def setSize(codex, author):
     if author.server_permissions.administrator or author.server_permissions.manage_messages:
         return db.updateSize(author.server.id, int(codex[0]), int(codex[1]))

@@ -32,6 +32,7 @@ class Battle:
         self.attacked = False   # True if the current character has /attacked or used an /ability during their turn
         self.marks=[] #this stores various marks in the battle. Can be used as reminders for when stuff will happens or has happened
         self.atRound=0 #At which round we are currently. Used by the mark system
+
     def addCharacter(self, char):
         if char.name.lower() not in self.characters:
             self.characters[char.name.lower()] = char
@@ -56,6 +57,7 @@ class Battle:
         if char in self.participants:
             raise ValueError(char.name + " is already participating!")
         else:
+            char.respawn()
             firstEq = -1
             firstLess = -1
             for i in range(len(self.participants)):
@@ -107,7 +109,8 @@ class Battle:
             return self.participants[self.turn]
 
     def currentCharPretty(self):
-        return 'It is ' + self.currentChar().name + "'s turn. " + self.participants[self.turn].mention
+        char = self.currentChar()
+        return 'It is ' + char.name + "'s turn. " + char.mention
 
     def __str__(self):
         out = self.name + ' (' + self.id + ')\n'
