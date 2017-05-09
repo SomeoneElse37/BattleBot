@@ -4,6 +4,8 @@ from calc.dice import *
 from calc.vector import *
 from calc.path import *
 
+from util.errors import *
+
 # Awful O(n^2) stupidity, I know, but this needs to work on things that aren't hashable.
 def _removeDups(xs):
     out = []
@@ -250,9 +252,9 @@ class Battle:
                         pos = addVec(pos, backStep)
                         codex = codex[1:]
                     except ValueError:
-                        raise ValueError('Expected an integer after - sign; got ' + codex[0])
+                        raise AbilityError('Expected an integer after - sign; got ' + codex[0])
                 else:
-                    raise ValueError('Could not parse direction or waypoint: ' + codex[0]) # If none of the above matched, raise an exception
+                    raise AbilityError('Could not parse direction or waypoint: ' + codex[0]) # If none of the above matched, raise an exception
             else:       # If an actual direction could be parsed
                 path.append(step)
                 pos = addVec(pos, step)
@@ -295,9 +297,9 @@ class Battle:
         out = ''
         prevDeadChars = [ch for ch in self.participants if ch.isDead()]
         if 'reaction' in ability.targets:
-            raise ValueError("This is a reaction. You can't just activate it anytime.")
+            raise AbilityError("This is a reaction. You can't just activate it anytime.")
         if 'auto' in ability.targets:
-            raise ValueError("This is an automatic ability. It'll activate automatically at the end of your turn.")
+            raise AbilityError("This is an automatic ability. It'll activate automatically at the end of your turn.")
         elif 'random' in ability.targets:
             out += ability.execute(user, self.participants)
         elif 'location' in ability.targets:
@@ -307,9 +309,9 @@ class Battle:
         else:
             if len(codex) == 0:     # No targets given
                 if 'ability' in ability.targets or 'modifier' in ability.targets:
-                    raise ValueError('No targets given for a modifier- or ability-targeting ability.')
+                    raise AbilityError('No targets given for a modifier- or ability-targeting ability.')
                 if 'self' not in ability.targets:
-                    raise ValueError('No targets given for an ability that cannot target its user.')
+                    raise AbilityError('No targets given for an ability that cannot target its user.')
                 out = ability.execute(user, self.participants, targets=[user])
             else:
                 targets = []
@@ -321,10 +323,10 @@ class Battle:
                     i += 1
                     if char is user:
                         if 'self' not in ability.targets:
-                            raise ValueError('You cannot target yourself with this ability.')
+                            raise AbilityError('You cannot target yourself with this ability.')
                     else:
                         if 'ally' not in ability.targets and 'enemy' not in ability.targets:     # BattleBot has no way to know who is an ally and who is an enemy (yet)
-                            raise ValueError('You cannot target {} with this ability.'.format(char.name))
+                            raise AbilityError('You cannot target {} with this ability.'.format(char.name))
                     targets.append(char)
                     if 'ability' in ability.targets:
                         if codex[i].lower() in char.abilities:
@@ -354,7 +356,7 @@ class Battle:
             out += self.availableActions()
             if self.moved:
                 self.passTurn()
-        except ValueError as e:
+        except AbilityError as e:
             return str(e)
         except KeyError as e:
             return 'Character/ability not found: {}'.format(e.args[0])

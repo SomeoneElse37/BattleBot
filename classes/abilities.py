@@ -47,9 +47,9 @@ class Ability:
             self.targets.remove('aoe')
             self.targets.add('location')
         if 'location' in self.targets and not self.targets.isdisjoint({'ability', 'modifier'}):
-            raise ValueError('AoE abilities cannot target abilities or modifiers (yet). Until I figure out a good way to handle that. Any ideas?')
+            raise AbilityError('AoE abilities cannot target abilities or modifiers (yet). Until I figure out a good way to handle that. Any ideas?')
         if 'auto' in self.targets and self.targets.isdisjoint({'self', 'random', 'location'}):
-            raise ValueError('Auto abilities cannot be targeted: they must have Location/AoE, Random, or Self.')
+            raise AbilityError('Auto abilities cannot be targeted: they must have Location/AoE, Random, or Self.')
         if self.targets.isdisjoint({'self', 'ally', 'enemy'}):
             self.targets.update({'self', 'ally', 'enemy'})
 
@@ -161,16 +161,16 @@ class Ability:
                     if out[1] == 'damage' and out[2] == 'target':
                         out[1] = 'extend'
                     if out[1] == 'apply' and out[2] == 'target':
-                        raise ValueError("This is an ability that targets abilities or modifiers. Applying a modifier to one of those doesn't make a whole lot of sense, now does it?")
+                        raise AbilityError("This is an ability that targets abilities or modifiers. Applying a modifier to one of those doesn't make a whole lot of sense, now does it?")
                 else:
                     if out[1] in {'cancel', 'extend'}:
-                        raise ValueError("You can't cancel or extend a character. Those are for modifiers and abilities.")
+                        raise AbilityError("You can't cancel or extend a character. Those are for modifiers and abilities.")
                     if out[2] in {'owner', 'holder'}:
-                        raise ValueError("You can't mess with the owner or holder of a character. Those are for modifiers and abilities.")
+                        raise AbilityError("You can't mess with the owner or holder of a character. Those are for modifiers and abilities.")
                 if out[2] == 'source' and 'reaction' not in self.targets:
-                    raise ValueError('Source is only for reactions.')
+                    raise AbilityError('Source is only for reactions.')
         else:
-            raise ValueError('Invalid /editability command: {}'.format(codex[0]))
+            raise AbilityError('Invalid /editability command: {}'.format(codex[0]))
 
         if theRest is not None:
             out.append(theRest)
@@ -196,7 +196,7 @@ class Ability:
                 del self.steps[i]
                 return
             self.steps[i] = self.parseStep(codex[1:])
-        except ValueError:
+        except AbilityError:
             name = ''
             if codex[0] == 'calc':
                 name = codex[1]
@@ -323,11 +323,13 @@ class Ability:
 
     def execute(self, user, participants, targets=None, locus=None, items=None, source=None):
         if self.timeout > 0:
-            raise ValueError('This ability is on cooldown for {:d} more turns.'.format(self.timeout))
+            raise AbilityError('This ability is on cooldown for {:d} more turns.'.format(self.timeout))
         if self.timeout < 0:
-            raise ValueError('This ability is silenced.')
+            raise AbilityError('This ability is silenced.')
         self.isInUse = True
         log = ''
+        if targets is None:
+            targets = []
         if locus is not None:
             locus = Vector(locus)
         if 'random' in self.targets:
@@ -355,20 +357,20 @@ class Ability:
                 targets = self.getAllTargetsInRange(user, participants, locus, self.limit)
                 shuffle(targets)
             else:
-                raise ValueError('That location is {:d} tiles away from you. This ability has a range of {:d}.'.format(user.distanceTo(locus), self.range))
+                raise AbilityError('That location is {:.2f} tiles away from you. This ability has a range of {:d}.'.format(float(user.distanceTo(locus)), self.range))
         else:
             if len(targets) <= self.limit and (items is None or len(items) <= self.limit):
                 for char in targets:
                     if user.distanceTo(char.pos) > self.range:
-                        raise ValueError('{} is {:d} tiles away from you. This ability has a range of {:d}.'.format(char.name, user.distanceTo(char.pos), self.range))
+                        raise AbilityError('{} is {:d} tiles away from you. This ability has a range of {:d}.'.format(char.name, user.distanceTo(char.pos), self.range))
                     if char not in participants:
-                        raise ValueError('{} is not participating in this battle!'.format(char.name))
+                        raise AbilityError('{} is not participating in this battle!'.format(char.name))
                     if char.isDead() and 'corpse' not in self.targets:
-                        raise ValueError('{} is dead, and this ability cannot target corpses.'.format(char.name))
+                        raise AbilityError('{} is dead, and this ability cannot target corpses.'.format(char.name))
                     if not char.isDead() and 'corpse' in self.targets:
-                        raise ValueError('{} is not dead, and this ability can only target corpses.'.format(char.name))
+                        raise AbilityError('{} is not dead, and this ability can only target corpses.'.format(char.name))
             else:
-                raise ValueError('Too many targets. Requires {:d} or less; got {:d}.'.format(self.limit, len(targets)))
+                raise AbilityError('Too many targets. Requires {:d} or less; got {:d}.'.format(self.limit, len(targets)))
         if 'ability' in self.targets or 'modifier' in self.targets:
             for item in items:
                 nextLog = self.executeMiddle(user, participants, item=item, locus=locus, source=source)

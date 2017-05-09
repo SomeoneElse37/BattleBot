@@ -337,7 +337,7 @@ Minion: {!s}""".format(self.username, self.userid, self.name, self.race, int(sel
         self.abilities[codex[0].lower()] = Ability(codex)
 
     def getReaction(self):
-        reactions = [abl for abl in self.abilities.values() if not abl.isInUse]
+        reactions = [abl for abl in self.abilities.values() if ('reaction' in abl.targets and not abl.isInUse)]
         if len(reactions) == 0:
             return None
         else:
