@@ -281,7 +281,7 @@ These commands are usable by all players, and do not typically have any impact o
 /roll XdY: Roll X dYs and add the results.
 /defaultstats: Print out the default stats for all the size tiers.
 /makechar name race [hp acc eva atk dfn spd]: Create a character with the given name, race, and stat point distribution.
-    Accepted races: faerie, elf, human, werecat, elfcat, cyborg, robot, kraken, elfship, steamship
+    Accepted races: crate, faerie, elf, human, werecat, elfcat, cyborg, robot, kraken, elfship, steamship
 /restat name hp acc eva atk dfn spd: Reshuffle your stats. Only works outside of battle.
 /setreach name dist: Set the range of the character's basic attack.
 /delete name: Delete a character. Only works on characters you created. Warning, this is permanent!
