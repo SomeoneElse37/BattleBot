@@ -129,7 +129,7 @@ All operators are case-insensitive. calcdmg, CALCDMG, and caLCdmG all work just 
 /help rpn vector: Vector math
 /help rpn stack: Operators that directly manipulate the stack
 /help rpn roll: Dice-rolling operators
-/help rpn ability: The operators that only work in abilities""",
+/help rpn ability: Operators that only make sense in abilities""",
         'number': """Numerical Operators
 
 First, the basics. These operators all pop two numbers off the stack, and push their result back on.
@@ -183,10 +183,13 @@ Several of the numerical operators also work on vectors:
 + : Vector addition, tip-to-tail.
 - : Vector subtraction. Like +, except the second vector is flipped around 180 degrees.
 * : Dot product.
-    If one of the arguments is a numbeer, not a vector, * will instead scale the vector by that amount.
+    If used on a vector and a scalar (i.e. a number that isn't a vector), * will instead scale the vector by the scalar amount.
+    For example, "4 4 vec 2 *" will return (8, 8).
 @ : Cross product.
 / : Reciprocal scale. "vec num /" will scale vec by a factor of 1/num, and return the result.
     For example, "4 4 vec 2 /" will return (2, 2).
+
+Also note that all the vector operators also work on character objects, such as those returned by self, target, etc. as described in /help rpn ability. In addition, /calc rpn has access to all of the characters that exist on the server- the name of any character given to that command will evaluate to the character itself. In all cases, applying any of the operators shown on this page to a character will behave exactly as if the operator was applied to the character's position.
 
 To compute the angle between two vectors; call them u and v:
 u v dot u abs v abs * / acos
@@ -227,7 +230,7 @@ atk: Attack.
 def: Defense.
 spd: Speed.
 health: The character's *current* HP.
-pos: The character's position, as a vector.
+pos: The character's position, as a vector. This is more or less a no-op, since characters now behave just like their position vector, for the purposes of the vector operators.
 
 Next, the modifier operators. All take three arguments, of the form [factor, stat, duration]. These just create the modifier; the 'apply' ability effect will apply it to a character.
 The syntax parallels that of /addModifier, described in /help gm. So I'll just give some examples in the RPN format here:
@@ -235,10 +238,7 @@ The syntax parallels that of /addModifier, described in /help gm. So I'll just g
     5 EVA 2 -mod == -5 Evasion for 2 turns
     150 SPD 0 mod% == 150% Speed until end of turn
     20 DEF 1 +mod% == +20% (== 120%) Defense for 1 turn
-    15 ACC -1 -mod% == -15% (== 85%) Accuracy until end of battle
-
-And finally, with two arguments,
-dist: The Pythagorean straight-line distance between two locations (as returned by locus or pos). May be used to have the effect of an ability depend on the distance between the user and the target, or on the distance between the target and the epicenter of an AOE effect, etc. Go wild."""}
+    15 ACC -1 -mod% == -15% (== 85%) Accuracy until end of battle"""}
 
 help_dict = {'bot': """Welcome to BattleBot!
 This is a Discord bot written by Someone Else 37 using discord.py.
