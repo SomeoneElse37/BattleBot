@@ -110,10 +110,6 @@ def parseRPN(codex, data = {}, functions = {}):
         # log += '\n\nWarning: Expected stack to contain exactly one item after execution; got {!s}'.format(stack)
         return stack, log
 
-def testRPN(codex):
-    retval, log = parseRPN(codex)
-    return log + '\n\n' + str(retval)
-
 # Used in the auxFunctions list to get a stat from an object, and format the result as parseRPN expects.
 # Unless the object isn't a character, in which case just return the object and the stat.
 # This would be so much easier in Haskell, where I don't need to go so far out of my way to curry functions with if statements in them...
@@ -144,6 +140,11 @@ auxFunctions = {
         '+mod%': (3, lambda xs, data: ([(xs[2], 1 + xs[0] / 100, xs[1], True)], '')),
         '-mod%': (3, lambda xs, data: ([(xs[2], 1 - xs[0] / 100, xs[1], True)], ''))}
 
+def testRPN(codex, data={}):
+    retval, log = parseRPN(codex, data=data, functions=auxFunctions)
+    return log + '\n\n' + str(retval)
+
+# Wait, why is this in this file? These comparison functions are only used in the Ability parser...
 comparisons = {
         '<0': lambda n: n < 0,
         '==0': lambda n: n == 0,
@@ -151,4 +152,7 @@ comparisons = {
         '<=0': lambda n: n <= 0,
         '!=0': lambda n: n != 0,
         '>=0': lambda n: n >= 0}
+
+
+
 

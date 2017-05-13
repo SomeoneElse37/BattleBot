@@ -672,7 +672,7 @@ def gm_ability(codex, author):
 def addMark(codex,author):
     if len(codex)==1:
         codex.append(0)
-    currentRound = db.getCurrentRound(author.server.id) 
+    currentRound = db.getCurrentRound(author.server.id)
     codex[1] = currentRound + int(codex[1])
     db.addMark(author.server.id,codex[0],int(codex[1]))
     return "Mark " + str(codex[0]) + " is set for round " + str(codex[1]) +" and it is currently round " + str(currentRound)
@@ -782,7 +782,7 @@ def getReply(content, message):
             elif codex[0] == 'testStatRoll':
                 return testStatisticRolls(codex[1:])
             elif codex[0] == 'rpn':
-                return testRPN(codex[1:])
+                return testRPN(codex[1:], data=db.getBattle(message.author.server.id).characters)
         elif codex[0] == 'help':
             if len(codex) > 1:
                 key = codex[1].lower()

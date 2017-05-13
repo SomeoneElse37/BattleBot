@@ -13,7 +13,7 @@ def defaultStats(size):
 def statString(stats):
     return "HP: {:d}  Accuracy: {:d}  Evasion: {:d}  Attack: {:d}  Defense: {:d}  Speed: {:d}".format(stats['HP'], stats['ACC'], stats['EVA'], stats['ATK'], stats['DEF'], stats['SPD'])
 
-class Character:
+class Character(Vector):
     """Represents a character known to BattleBot."""
 
     sizeTiers = {
@@ -342,6 +342,15 @@ Minion: {!s}""".format(self.username, self.userid, self.name, self.race, int(sel
             return None
         else:
             return choice(reactions)
+
+    # This should link the coords field from Vector into the Character's pos field, allowing arithmetic/vector
+    # operations applied to characters just operate on the character's position as if it was a vector.
+    @property
+    def coords(self):
+        if isinstance(self.pos, Vector):
+            return self.pos.coords
+        else:
+            return self.pos
 
     def __eq__(self, other):
         return self.userid == other.userid and self.name == other.name
