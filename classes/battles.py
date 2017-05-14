@@ -227,6 +227,13 @@ class Battle:
     def parseDirectionList(self, startPos, codex):
         path = []
         pos = startPos
+        try:
+            dist = int(codex[-1])
+            if dist < 0:
+                codex[-1] = '-'
+                codex.append(str(dist))
+        except ValueError:
+            pass
         while len(codex) > 0:
             step, codex = self.parseStep(codex, pos)
             if step is None:    # Current element of codex cannot be parsed as a direction because it is not formatted like '2W' or '5s'
