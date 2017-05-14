@@ -2,8 +2,12 @@ from calc.vector import *
 
 # Parse a string formatted like '4E', returning an (x, 0) or (0, y) pair, or raises a ValueError is the format is incorrect
 def parseCoord(strn):
-    char = strn[-1].lower()
-    num = int(strn[:-1]) if len(strn) > 1 else 1
+    try:
+        char = strn[-1].lower()
+        num = int(strn[:-1]) if len(strn) > 1 else 1
+    except ValueError:
+        char = strn[0].lower()
+        num = int(strn[1:]) if len(strn) > 1 else 1
     if char == 'n':
         return (0, num)
     elif char == 's':
