@@ -198,7 +198,7 @@ class Ability:
                 del self.steps[i]
                 return
             self.steps[i] = self.parseStep(codex[1:])
-        except AbilityError:
+        except (ValueError, AbilityError):
             name = ''
             if codex[0] == 'calc':
                 name = codex[1]
