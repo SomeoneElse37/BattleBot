@@ -31,7 +31,7 @@ class Character(Vector):
             }
 
     baseStats = {
-            'crate': makeStatDict(1, 1, 1, 1, 1, 1),
+            'crate': makeStatDict(8, 8, 8, 8, 8, 8),
             'faerie': defaultStats(sizeTiers['faerie']),    # This sets the base stats for each species to the default, computed from their size.
             'elf': defaultStats(sizeTiers['elf']),          # If Lens wants different base stats for any/all races, I can hardcode that easily.
             'human': defaultStats(sizeTiers['human']),      # Allowing GMs to set that up per-server is doable, but would take a bit more work.

@@ -6,6 +6,8 @@ from calc.rpn import *
 
 from classes.modifiers import *
 
+from util.errors import *
+
 def _pickAndRemove(candidates, n, weight):
     # print('Candidates: {!s}'.format(candidates))
     # print('Total Weight: {}'.format(weight))
