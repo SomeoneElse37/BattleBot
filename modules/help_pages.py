@@ -124,6 +124,10 @@ BattleBot's RPN parser has a wide variety of operators that it understands.
 Most operators are available to the /calc rpn command. A few more become available when writing abilities.
 All operators are case-insensitive. calcdmg, CALCDMG, and caLCdmG all work just fine.
 
+/calc rpn may be used to test out RPN code that may later be used in abilities, or just to perform calculations. For convenience, that command has access to all of the characters on the server- the name of any character will evaluate to the character itself. Abilities do not have access to the whole server, instead having the target, self, etc. commands described in /help rpn ability. Either way, those commands will push the corresponding character object onto the stack.
+
+Character objects may be used in the vector operations, and will implicitly be treated as if its position vector was pushed instead. Abilities additionally have access to the commands listed in /help rpn ability, which give access to the character's health and stats.
+
 /help rpn number: Numerical operators
 /help rpn trig: Trigonometric and floating-point operators
 /help rpn vector: Vector math
@@ -188,8 +192,6 @@ Several of the numerical operators also work on vectors:
 @ : Cross product.
 / : Reciprocal scale. "vec num /" will scale vec by a factor of 1/num, and return the result.
     For example, "4 4 vec 2 /" will return (2, 2).
-
-Also note that all the vector operators also work on character objects, such as those returned by self, target, etc. as described in /help rpn ability. In addition, /calc rpn has access to all of the characters that exist on the server- the name of any character given to that command will evaluate to the character itself. In all cases, applying any of the operators shown on this page to a character will behave exactly as if the operator was applied to the character's position.
 
 To compute the angle between two vectors; call them u and v:
 u v dot u abs v abs * / acos
