@@ -305,7 +305,7 @@ class Battle:
         prevDeadChars = [ch for ch in self.participants if ch.isDead()]
         if 'reaction' in ability.targets:
             raise AbilityError("This is a reaction. You can't just activate it anytime.")
-        if 'auto' in ability.targets:
+        if 'auto' in ability.targets and not ignoreTimeout:
             raise AbilityError("This is an automatic ability. It'll activate automatically at the end of your turn.")
         elif 'random' in ability.targets:
             out += ability.execute(user, self.participants)
