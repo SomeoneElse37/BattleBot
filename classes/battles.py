@@ -188,7 +188,7 @@ class Battle:
     def onDeath(self, char):
         char.onDeath()
         if char.ephemeral:
-            removeParticipantByChar(char)
+            self.removeParticipantByChar(char)
 
     def basicAttack(self, targetName):
         if self.attacked:
