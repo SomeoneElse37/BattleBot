@@ -149,6 +149,7 @@ class Battle:
             pass
 
     def passTurn(self):
+        log = ''
         while True:
             self.currentChar().tickModifiers()
             self.currentChar().tickAbilities()
@@ -168,12 +169,14 @@ class Battle:
                 if currentChar.isDead():
                     continue
                 for abl in currentChar.getAutoAbilities():
-                    abl.execute(currentChar, self.participants, targets=[currentChar], locus=currentChar.pos)
+                    log += '\n\n~~ {}: {} ~~\n'.format(self.currentChar().name, abl.name)
+                    log += abl.execute(currentChar, self.participants, targets=[currentChar], locus=currentChar.pos)
                 if currentChar.forceTurnSkip:
                     continue
                 break
             except AttributeError:
                 break
+        return log
 
     def availableActions(self):
         if self.moved and self.attacked:
@@ -209,7 +212,9 @@ class Battle:
         self.attacked = True
         out += self.availableActions()
         if self.moved:
-            self.passTurn()
+            aalog = self.passTurn()     # Auto Abilities Log, in case any auto abilities triggered between turns
+            if len(aalog) > 0:
+                out += aalog
         return out
 
     # Returns (step, restOfCodex). Just accounts for using a name as a waypoint. Other stuff will return (None, theWholeCodex), just like parseDirection().
@@ -291,7 +296,9 @@ class Battle:
         self.moved = True
         out += self.availableActions()
         if self.attacked:
-            self.passTurn()
+            aalog = self.passTurn()
+            if len(aalog) > 0:
+                out += aalog
         return out
 
     def useAbilityOf(self, char, abilityName, codex, user=None, ignoreTimeout=False):
@@ -362,7 +369,9 @@ class Battle:
             self.attacked = True
             out += self.availableActions()
             if self.moved:
-                self.passTurn()
+                aalog = self.passTurn()
+                if len(aalog) > 0:
+                    out += aalog
         except AbilityError as e:
             return str(e)
         except KeyError as e:
