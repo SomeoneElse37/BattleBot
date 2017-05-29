@@ -169,7 +169,7 @@ class Battle:
                 if currentChar.isDead():
                     continue
                 for abl in currentChar.getAutoAbilities():
-                    log += '\n\n~~ {}: {} ~~\n'.format(self.currentChar().name, abl.name)
+                    log += '\n-- {}: {} --\n'.format(self.currentChar().name, abl.name)
                     log += abl.execute(currentChar, self.participants, targets=[currentChar], locus=currentChar.pos)
                 if currentChar.forceTurnSkip:
                     continue
