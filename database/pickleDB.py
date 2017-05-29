@@ -167,8 +167,7 @@ class Database:
 
     def doPassTurn(self, serverId):
         battle = self.getBattle(serverId)
-        battle.passTurn()
-        return battle.currentCharPretty()
+        return battle.passTurn() + '\n\n' + battle.currentCharPretty()
 
     def doBasicAttack(self, target, serverId):
         battle= self.getBattle(serverId)
