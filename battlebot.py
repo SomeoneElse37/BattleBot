@@ -310,12 +310,19 @@ def makeStatsFromCodex(codex):
 
 def stats(codex):
     out = '`{:11s}  {:>5s} {:>5s} {:>5s} {:>5s} {:>5s} {:>5s}`\n'.format('Size Tier', 'HP', 'Acc', 'Eva', 'Atk', 'Def', 'Spd')
-    ss = defaultStats(1);
-    out += '`{:11s}: {:5d} {:5d} {:5d} {:5d} {:5d} {:5d}`\n'.format('1 (Faerie)', ss['HP'], ss['ACC'], ss['EVA'], ss['ATK'], ss['DEF'], ss['SPD'])
-    ss = defaultStats(2);
-    out += '`{:11s}: {:5d} {:5d} {:5d} {:5d} {:5d} {:5d}`\n'.format('2 (Werecat)', ss['HP'], ss['ACC'], ss['EVA'], ss['ATK'], ss['DEF'], ss['SPD'])
-    ss = defaultStats(3);
-    out += '`{:11s}: {:5d} {:5d} {:5d} {:5d} {:5d} {:5d}`'.format('3 (Kraken)', ss['HP'], ss['ACC'], ss['EVA'], ss['ATK'], ss['DEF'], ss['SPD'])
+    out += '`1(Faerie)`\n'
+    sp = statFreePoints(1);
+    sv = statValues(1);
+    out += '`{:11s}: {:5d} {:5d} {:5d} {:5d} {:5d} {:5d}`\n'.format('Free Points', sp['HP'], sp['ACC'], sp['EVA'], sp['ATK'], sp['DEF'], sp['SPD'])
+    out += '`{:11s}: {:5d} {:5d} {:5d} {:5d} {:5d} {:5d}`\n'.format('Point Value', sv['HP'], sv['ACC'], sv['EVA'], sv['ATK'], sv['DEF'], sv['SPD'])
+    sp = statFreePoints(2);
+    sv = statValues(2);
+    out += '`{:11s}: {:5d} {:5d} {:5d} {:5d} {:5d} {:5d}`\n'.format('Free Points', sp['HP'], sp['ACC'], sp['EVA'], sp['ATK'], sp['DEF'], sp['SPD'])
+    out += '`{:11s}: {:5d} {:5d} {:5d} {:5d} {:5d} {:5d}`\n'.format('Point Value', sv['HP'], sv['ACC'], sv['EVA'], sv['ATK'], sv['DEF'], sv['SPD'])
+    sp = statFreePoints(3);
+    sv = statValues(3);
+    out += '`{:11s}: {:5d} {:5d} {:5d} {:5d} {:5d} {:5d}`\n'.format('Free Points', sp['HP'], sp['ACC'], sp['EVA'], sp['ATK'], sp['DEF'], sp['SPD'])
+    out += '`{:11s}: {:5d} {:5d} {:5d} {:5d} {:5d} {:5d}`'.format(  'Point Value', sv['HP'], sv['ACC'], sv['EVA'], sv['ATK'], sv['DEF'], sv['SPD'])
     return out
 
 def makeChar(codex, author):
