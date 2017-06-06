@@ -19,7 +19,7 @@ def statFreePoints(size):
     return makeStatDict(1, 1, 0, 0, 1, 2**(size + 2), 0)
 
 def statString(stats):
-    return "HP: {:d}  Accuracy: {:d}  Evasion: {:d}  Attack: {:d}  Defense: {:d}  Speed: {:d}".format(stats['HP'], stats['ACC'], stats['EVA'], stats['ATK'], stats['DEF'], stats['SPD'])
+    return "HP: {:d}  Accuracy: {:d}  Evasion: {:d}  Attack: {:d}  Defense: {:d}  Speed: {:d}  Range: {:d}".format(stats['HP'], stats['ACC'], stats['EVA'], stats['ATK'], stats['DEF'], stats['SPD'], stats['RAN'])
 
 class Character(Vector):
     """Represents a character known to BattleBot."""
@@ -54,9 +54,9 @@ class Character(Vector):
 
     basePoints = {
             'crate': makeStatDict(0, 0, 0, 0, 0, 0, 0),
-            'faerie': statFreePoints(sizeTiers['faerie']),    # This sets the base stats for each species to the default, computed from their size.
-            'elf': statFreePoints(sizeTiers['elf']),          # If Lens wants different base stats for any/all races, I can hardcode that easily.
-            'human': statFreePoints(sizeTiers['human']),      # Allowing GMs to set that up per-server is doable, but would take a bit more work.
+            'faerie': statFreePoints(sizeTiers['faerie']),
+            'elf': statFreePoints(sizeTiers['elf']),
+            'human': statFreePoints(sizeTiers['human']),
             'werecat': statFreePoints(sizeTiers['werecat']),
             'elfcat': statFreePoints(sizeTiers['elfcat']),
             'cyborg': statFreePoints(sizeTiers['cyborg']),
@@ -73,7 +73,7 @@ class Character(Vector):
                     for m in mods:
                         m.holder = None
                         m.revoke()
-        self.modifiers = dict(HP=([], []), ACC=([], []), EVA=([], []), ATK=([], []), DEF=([], []), SPD=([], []))
+        self.modifiers = dict(HP=([], []), ACC=([], []), EVA=([], []), ATK=([], []), DEF=([], []), SPD=([], []), RAN=([], []))
 
     # Attributes: username, userid, name, race, size, statPoints, baseStats, abilities, modifiers, health, location, secret
     def __init__(self, owner, name, race, statpoints, secret=False):
