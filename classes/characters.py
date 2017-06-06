@@ -253,13 +253,6 @@ Health: {:d}
 Minion: {!s}""".format(self.username, self.userid, self.name, self.race, int(self.size), \
                 s1, s2, list(self.abilities.values()), max(int(self.attackRange), 1.5), \
                 int(self.pos[0]), int(self.pos[1]), int(self.health), self.isMinion)
-        note = ''
-        if self.hp() < 1:
-            note += '\n**Warning! Your HP is less than 1! You will die instantly at the start of the battle!**'
-        if self.dfn() < 4:
-            note += '\n**Warning! Your DEF is less than 4! You are at serious risk of taking massive amounts of damage!**'
-        if len(note) > 0:
-            out += '\n{}\nUse /restat {} *hp acc eva atk dfn spd* to adjust your stats.'.format(note, self.name)
         return out
 
     # Reset health to the maximum, and clear all modifiers.
