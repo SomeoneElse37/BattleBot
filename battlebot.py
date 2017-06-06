@@ -303,10 +303,10 @@ def calcApproach(codex):
 ##################################################
 
 def makeStatsFromCodex(codex):
-    if len(codex) >= 6:
-        return makeStatDict(int(codex[0]), int(codex[1]), int(codex[2]), int(codex[3]), int(codex[4]), int(codex[5]))
+    if len(codex) >= 7:
+        return makeStatDict(int(codex[0]), int(codex[1]), int(codex[2]), int(codex[3]), int(codex[4]), int(codex[5]), int(codex[6]))
     else:
-        return makeStatDict(0, 0, 0, 0, 0, 0)
+        return makeStatDict(0, 0, 0, 0, 0, 0, 0)
 
 def stats(codex):
     out = '`{:11s}  {:>5s} {:>5s} {:>5s} {:>5s} {:>5s} {:>5s} {:>5s}`\n'.format('Size Tier', 'HP', 'Acc', 'Eva', 'Atk', 'Def', 'Spd', 'Ran')
