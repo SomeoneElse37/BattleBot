@@ -16,7 +16,7 @@ defaultStats = statValues
 
 # Computes the number of stat points each character of the given size tier gets for free
 def statFreePoints(size):
-    return makeStatsDict(1, 1, 0, 0, 1, 2**(size + 2), 0)
+    return makeStatDict(1, 1, 0, 0, 1, 2**(size + 2), 0)
 
 def statString(stats):
     return "HP: {:d}  Accuracy: {:d}  Evasion: {:d}  Attack: {:d}  Defense: {:d}  Speed: {:d}".format(stats['HP'], stats['ACC'], stats['EVA'], stats['ATK'], stats['DEF'], stats['SPD'])
