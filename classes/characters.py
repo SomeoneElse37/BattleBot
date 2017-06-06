@@ -4,11 +4,19 @@ from random import randint, gauss, shuffle, choice
 from calc.dice import *
 from calc.vector import *
 
-def makeStatDict(hp, acc, eva, atk, dfn, spd):
-    return dict(HP=hp, ACC=acc, EVA=eva, ATK=atk, DEF=dfn, SPD=spd)
+def makeStatDict(hp, acc, eva, atk, dfn, spd, ran=0):
+    return dict(HP=hp, ACC=acc, EVA=eva, ATK=atk, DEF=dfn, SPD=spd, RAN=ran)
 
-def defaultStats(size):
-    return makeStatDict(2**(size * 2), 2**(-size + 5), 2**(-size + 5), 2**(size * 4 - 2), 2**(size * 2), 2**(size))
+# Computes the value of each stat point assigned to each stat of a creature of the given size tier.
+def statValues(size):
+    return makeStatDict(2**(size * 2 - 2), 2**(-size + 3), 2**(-size + 3), 2**(size * 4 - 3), 2**(size * 2 - 2), 2**(size - 1), 2**(size * 2 - 1))
+
+# Legacy alias
+defaultStats = statValues
+
+# Computes the number of stat points each character of the given size tier gets for free
+def statFreePoints(size):
+    return makeStatsDict(1, 1, 0, 0, 1, 2**(size + 2), 0)
 
 def statString(stats):
     return "HP: {:d}  Accuracy: {:d}  Evasion: {:d}  Attack: {:d}  Defense: {:d}  Speed: {:d}".format(stats['HP'], stats['ACC'], stats['EVA'], stats['ATK'], stats['DEF'], stats['SPD'])
@@ -31,7 +39,7 @@ class Character(Vector):
             }
 
     baseStats = {
-            'crate': makeStatDict(8, 8, 8, 8, 8, 8),
+            'crate': makeStatDict(1, 1, 1, 1, 1, 1, 1),
             'faerie': defaultStats(sizeTiers['faerie']),    # This sets the base stats for each species to the default, computed from their size.
             'elf': defaultStats(sizeTiers['elf']),          # If Lens wants different base stats for any/all races, I can hardcode that easily.
             'human': defaultStats(sizeTiers['human']),      # Allowing GMs to set that up per-server is doable, but would take a bit more work.
