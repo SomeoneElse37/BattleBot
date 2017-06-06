@@ -40,16 +40,30 @@ class Character(Vector):
 
     baseStats = {
             'crate': makeStatDict(1, 1, 1, 1, 1, 1, 1),
-            'faerie': defaultStats(sizeTiers['faerie']),    # This sets the base stats for each species to the default, computed from their size.
-            'elf': defaultStats(sizeTiers['elf']),          # If Lens wants different base stats for any/all races, I can hardcode that easily.
-            'human': defaultStats(sizeTiers['human']),      # Allowing GMs to set that up per-server is doable, but would take a bit more work.
-            'werecat': defaultStats(sizeTiers['werecat']),
-            'elfcat': defaultStats(sizeTiers['elfcat']),
-            'cyborg': defaultStats(sizeTiers['cyborg']),
-            'robot': defaultStats(sizeTiers['robot']),
-            'kraken': defaultStats(sizeTiers['kraken']),
-            'elfship': defaultStats(sizeTiers['elfship']),
-            'steamship': defaultStats(sizeTiers['steamship']),
+            'faerie': statValues(sizeTiers['faerie']),    # This sets the base stats for each species to the default, computed from their size.
+            'elf': statValues(sizeTiers['elf']),          # If Lens wants different base stats for any/all races, I can hardcode that easily.
+            'human': statValues(sizeTiers['human']),      # Allowing GMs to set that up per-server is doable, but would take a bit more work.
+            'werecat': statValues(sizeTiers['werecat']),
+            'elfcat': statValues(sizeTiers['elfcat']),
+            'cyborg': statValues(sizeTiers['cyborg']),
+            'robot': statValues(sizeTiers['robot']),
+            'kraken': statValues(sizeTiers['kraken']),
+            'elfship': statValues(sizeTiers['elfship']),
+            'steamship': statValues(sizeTiers['steamship']),
+            }
+
+    basePoints = {
+            'crate': makeStatDict(0, 0, 0, 0, 0, 0, 0),
+            'faerie': statFreePoints(sizeTiers['faerie']),    # This sets the base stats for each species to the default, computed from their size.
+            'elf': statFreePoints(sizeTiers['elf']),          # If Lens wants different base stats for any/all races, I can hardcode that easily.
+            'human': statFreePoints(sizeTiers['human']),      # Allowing GMs to set that up per-server is doable, but would take a bit more work.
+            'werecat': statFreePoints(sizeTiers['werecat']),
+            'elfcat': statFreePoints(sizeTiers['elfcat']),
+            'cyborg': statFreePoints(sizeTiers['cyborg']),
+            'robot': statFreePoints(sizeTiers['robot']),
+            'kraken': statFreePoints(sizeTiers['kraken']),
+            'elfship': statFreePoints(sizeTiers['elfship']),
+            'steamship': statFreePoints(sizeTiers['steamship']),
             }
 
     def clearModifiers(self):
@@ -76,6 +90,7 @@ class Character(Vector):
         else:
             self.size = Character.sizeTiers[self.race]
             self.baseStats = Character.baseStats[self.race]
+            self.basePoints = Character.basePoints[self.race]
             self.usedFallBack = False
         self.statPoints = statpoints
         # Modifiers are stored in this dictionary.
@@ -171,7 +186,7 @@ class Character(Vector):
         return total
 
     def calcStat(self, stat):
-        return int(self.baseStats[stat] * (self.statPoints[stat] / 8) * self.multModifiers(stat) + self.addModifiers(stat))
+        return int((self.statPoints[stat] + self.basePoints[stat]) * self.baseStats[stat] * self.multModifiers(stat) + self.addModifiers(stat))
 
     # Returns the characters hp STAT, i.e. their MAXIMUM health, NOT their current health. Use the self.health attribute for that.
     def hp(self):
@@ -193,8 +208,11 @@ class Character(Vector):
     def spd(self):
         return self.calcStat('SPD')
 
+    def ran(self):
+        return self.calcStat('RAN')
+
     def currentStats(self):
-        return makeStatDict(self.hp(), self.acc(), self.eva(), self.atk(), self.dfn(), self.spd())
+        return makeStatDict(self.hp(), self.acc(), self.eva(), self.atk(), self.dfn(), self.spd(), self.ran())
 
     def tickModifiers(self):
         for m in self.ownedModifiers:
