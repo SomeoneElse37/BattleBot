@@ -136,6 +136,7 @@ auxFunctions = {
         'atk': (1, statgetter('atk')),
         'def': (1, statgetter('def', 'dfn')),
         'spd': (1, statgetter('spd')),
+        'ran': (1, statgetter('ran')),
         'health': (1, lambda xs, data: ([xs[0].health], '')),
         'pos': (1, lambda xs, data: ([Vector(xs[0].pos)], '')),
         '+mod': (3, lambda xs, data: ([(xs[2], xs[0], xs[1], False)], '')),         # Modifier tuple format:
