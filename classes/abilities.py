@@ -28,12 +28,12 @@ def _pickAndRemove(candidates, n, weight):
 class Ability:
     """Represents an Ability that a character may call upon at any time. On their turn, at least."""
 
-    # Ability attributes: name, range, cooldown, timeout, targets, limit, steps, flavor
+    # Ability attributes: name, rangebonus, cooldown, timeout, targets, limit, steps, flavor
 
-    # Codex format: abilityName range cooldown ((self | ally | enemy)+ | location) [limit]
+    # Codex format: abilityName rangebonus cooldown ((self | ally | enemy)+ | location) [limit]
     def setFields(self, codex):
         codex = [s.lower() for s in codex]
-        self.range = int(codex[0])
+        self.rangebonus = int(codex[0])
         self.cooldown = int(codex[1])
         self.timeout = 0
         self.targets = set()
@@ -70,7 +70,7 @@ class Ability:
         if newOwner is None:
             newOwner = self.owner
         new = Ability(None, newOwner)
-        for attrib in ['name', 'range', 'cooldown', 'timeout', 'limit', 'flavor']:
+        for attrib in ['name', 'rangebonus', 'cooldown', 'timeout', 'limit', 'flavor']:
             setattr(new, attrib, getattr(self, attrib))
         for attrib in ['targets']:      # Add attributes that need to be copied to this list
             setattr(new, attrib, getattr(self, attrib).copy())
@@ -86,6 +86,10 @@ class Ability:
 
     def getHolder(self):
         return self.owner
+
+    # Compute the effective range of this ability
+    def range(self):
+        return self.rangebonus + self.owner.ran()
 
     def extend(self, amt):
         self.timeout += amt
@@ -336,7 +340,7 @@ class Ability:
             locus = Vector(locus)
         if 'random' in self.targets:
             # print('Executing randomly-targeted ability.')
-            candidates = self.getAllTargetsInRange(user, participants, user.pos, self.range)
+            candidates = self.getAllTargetsInRange(user, participants, user.pos, self.range())
             # print('Candidate targets in range: {!s}'.format(candidates))
             candidates = self.calcWeights(user, candidates)
             # print('Weights: {!s}\n'.format(candidates))
@@ -355,16 +359,16 @@ class Ability:
                 targets = list(map(itemgetter(1), candidates))
             log += 'Targets: {!s}\n'.format(targets)
         elif 'location' in self.targets and locus is not None:
-            if user.distanceTo(locus) <= self.range:
+            if user.distanceTo(locus) <= self.range():
                 targets = self.getAllTargetsInRange(user, participants, locus, self.limit)
                 shuffle(targets)
             else:
-                raise AbilityError('That location is {:.2f} tiles away from you. This ability has a range of {:d}.'.format(float(user.distanceTo(locus)), self.range))
+                raise AbilityError('That location is {:.2f} tiles away from you. This ability has a range of {:d}.'.format(float(user.distanceTo(locus)), self.range()))
         else:
             if len(targets) <= self.limit and (items is None or len(items) <= self.limit):
                 for char in targets:
-                    if user.distanceTo(char.pos) > self.range:
-                        raise AbilityError('{} is {:d} tiles away from you. This ability has a range of {:d}.'.format(char.name, user.distanceTo(char.pos), self.range))
+                    if user.distanceTo(char.pos) > self.range():
+                        raise AbilityError('{} is {:d} tiles away from you. This ability has a range of {:d}.'.format(char.name, user.distanceTo(char.pos), self.range()))
                     if char not in participants:
                         raise AbilityError('{} is not participating in this battle!'.format(char.name))
                     if char.isDead() and 'corpse' not in self.targets:
@@ -387,7 +391,7 @@ class Ability:
         return log
 
     def __str__(self):
-        out = 'Range: {:d}, Cooldown: {:d}({:d}), Targets: {!s}, Limit: {:d}'.format(self.range, self.cooldown, self.timeout, self.targets, self.limit)
+        out = 'Range Bonus: {:d}, Cooldown: {:d}({:d}), Targets: {!s}, Limit: {:d}'.format(self.rangebonus, self.cooldown, self.timeout, self.targets, self.limit)
         if len(self.flavor) > 0:
             out += '\n  ' + self.flavor
         for i, step in enumerate(self.steps):
