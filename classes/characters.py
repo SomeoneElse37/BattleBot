@@ -298,17 +298,17 @@ Minion: {!s}""".format(self.username, self.userid, self.name, self.race, int(sel
         else:
             return accStr, 0
 
-    # Movement ability. Roll speed, then move the Character's coordinates along the specified [(dx, dy), ...] path, up to the maximum distance.
+    # Movement ability. Check the speed stat, then move the Character's coordinates along the specified [(dx, dy), ...] path, up to the maximum distance.
     # If maxDist is positive, the Character will try to move exactly that distance, continuing beyond the end of the path if necessary and ignoring the stop parameter.
-    # If stop == False, when the Character reaches the end of the path, they will continue moving in that direction as far as the speed roll and maxDist permit.
+    # If stop == False, when the Character reaches the end of the path, they will continue moving in that direction as far as the speed stat and maxDist permit.
     # size is the size of the battlefield
     def testMove(self, path, maxDist, stop, size, skipRoll=False):
+        out = ''
         if skipRoll:
-            out = ''
             dist = float('inf')
         else:
-            out, dist = prettyRoll(self.spd(), secret=self.secret)
-        if maxDist >= 0:        # Set the distance to travel to either the roll or the maxDist parameter, if given, whichever is less.
+            dist = self.spd()
+        if maxDist >= 0:        # Set the distance to travel to either the speed stat or the maxDist parameter, if given, whichever is less.
             dist = min(dist, maxDist)
             stop = False
         elif skipRoll:  # If we skipped the roll, then we'd better not try to go beyond the end of the path without some limit
