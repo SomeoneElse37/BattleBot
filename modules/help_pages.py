@@ -8,11 +8,11 @@ BattleBot's ability system uses four commands.
     If it's an AoE ability, give it a path to where you want the effect to be focused.
             The path syntax is exactly the same as that described in /help move.
 /abilities name: List all of that character's abilities.
-/makeability name abilityName range cooldown targetTypes [limit]: Create an ability, or change these fields
+/makeability name abilityName rangebonus cooldown targetTypes [limit]: Create an ability, or change these fields
         of an ability that already exists.
     name: The name of the character that will have this ability.
     abilityName: The name of the ability.
-    range: The maximum permissible distance between you and your target(s).
+    rangebonus: The additional reach of this ability beyond the user's RAN stat.
     cooldown: How many turns this ability will not be available after using it.
         Cooldown 1 means that you will not be able to use the ability again for one turn after using it
                 (so you can use it every other turn).
@@ -231,6 +231,7 @@ eva: Evasion stat.
 atk: Attack.
 def: Defense.
 spd: Speed.
+ran: Range.
 health: The character's *current* HP.
 pos: The character's position, as a vector. This is more or less a no-op, since characters now behave just like their position vector, for the purposes of the vector operators.
 
@@ -340,7 +341,7 @@ to move just within range.
 
 The list of directions can also be suffixed with either a + sign or an integral distance.
 /move 2N 1S 5E +
-means "move 2 tiles north, then in the direction of 1S 5E, and keep going in that direction as far as the speed roll permits."
+means "move 2 tiles north, then in the direction of 1S 5E, and keep going in that direction as far as the speed stat permits."
 
 If the last argument is an integer, it means "move no more than this many tiles, continuing past the end of the path in the direction of the last segment if necessary."
 /move N E 25
@@ -362,28 +363,29 @@ The map will show characters with the first two letters in their name. If two ch
 I plan to have /map automatically give a view of the most interesting area of the battlefield eventually, but I'm not quite entirely sure how to do that. Any ideas?""",
         'stats': """Stats and How They Work
 
-Battlebot's stat system is a bit complex, so I thought I ought to explain it here. Each character has six different stats:
+Battlebot's stat system is a bit complex, so I thought I ought to explain it here. Each character has seven different stats:
 HP: Health points. Basically how much damage you can take before you die.
 ACC: Accuracy. The more of this you have, the more likely you'll actually be able to land an attack.
 EVA: Evasion. The more of this you have, the better your chances of dodging an attack and taking no damage at all.
 ATK: Attack. How hard you hit.
 DEF: Defense. How well you are able to resist being hit.
 SPD: Speed. Determines order of initiative and how quickly you can move around the battlefield.
+RAN: Range. The range of basic attacks and the base range of abilities.
 
-In addition, there are four different ways the word "stat" can be used:
+In addition, there are six different ways the word "stat" can be used:
 Species Stats: The "base" stats shared by all members of a species. Currently, these are
-    shared across *size tiers*, not just species. See /calc defaultstats for details.
+    shared across *size tiers*, not just species. Broken into two components:
+Point Value: How much each stat point is worth.
+Free Points: How many stat points a character effectively gets for free. These are not noted
+    on character sheets, on the Stat Points line on /list, or in /restat.
+    See /calc defaultstats for the numbers on both kinds of species stats.
 Stat Points: These are specific to each individual. Players are given a GM-specified number
-    of these to distribute across their six stats as they choose.
+    of these to distribute across their seven stats as they choose.
 Unmodified Stats: The results of combining the Species Stats and Stat points, calculated as
-    UnmodifiedStat = SpeciesStat \* (StatPoints / 8). See below.
+    UnmodifiedStat = (StatPoints + FreePoints) \* PointValue. See below.
 Effective Stats: The result of applying modifiers to the Unmodified Stats. See /help modifier for details.
 
-Unmodified stats start at 0, and increase by 1/8 of the corresponding species stat for each stat point applied.
-
-NOTE: If you do not allocate any points in HP, you will have 0 HP. You'll die instantly as soon as the battle begins.
-If your DEF is very low, you put yourself at a serious risk of taking massive amounts of damage from any hit.
-For these reasons, the bot will warn you if your unmodified HP is less than 1 or your unmodified DEF is less than 4.""",
+Unmodified stats start at the product of the two species stats, and increase by the corresponding point value for each stat point applied.""",
         'modifier': """Modifiers
 
 Battlebot supports modifiers to stats, of the multiplicative and additive varieties.
