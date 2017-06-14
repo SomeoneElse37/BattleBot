@@ -87,9 +87,9 @@ class Ability:
     def getHolder(self):
         return self.owner
 
-    # Compute the effective range of this ability
+    # Compute the effective range of this ability, with a minimum of 1.5 tiles. This lets all abilities target the eight tiles immediately surrounding the user.
     def range(self):
-        return self.rangebonus + self.owner.ran()
+        return min(self.rangebonus + self.owner.ran(), 1.5)
 
     def extend(self, amt):
         self.timeout += amt
@@ -363,12 +363,12 @@ class Ability:
                 targets = self.getAllTargetsInRange(user, participants, locus, self.limit)
                 shuffle(targets)
             else:
-                raise AbilityError('That location is {:.2f} tiles away from you. This ability has a range of {:d}.'.format(float(user.distanceTo(locus)), self.range()))
+                raise AbilityError('That location is {:.2f} tiles away from you. This ability has a range of {:d}.'.format(float(user.distanceTo(locus)), int(self.range())))
         else:
             if len(targets) <= self.limit and (items is None or len(items) <= self.limit):
                 for char in targets:
                     if user.distanceTo(char.pos) > self.range():
-                        raise AbilityError('{} is {:d} tiles away from you. This ability has a range of {:d}.'.format(char.name, user.distanceTo(char.pos), self.range()))
+                        raise AbilityError('{} is {:d} tiles away from you. This ability has a range of {:d}.'.format(char.name, user.distanceTo(char.pos), int(self.range())))
                     if char not in participants:
                         raise AbilityError('{} is not participating in this battle!'.format(char.name))
                     if char.isDead() and 'corpse' not in self.targets:
