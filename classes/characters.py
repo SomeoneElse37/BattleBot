@@ -186,7 +186,10 @@ class Character(Vector):
         return total
 
     def calcStat(self, stat):
-        return int((self.statPoints[stat] + self.basePoints[stat]) * self.baseStats[stat] * self.multModifiers(stat) + self.addModifiers(stat))
+        try:
+            return int((self.statPoints[stat] + self.basePoints[stat]) * self.baseStats[stat] * self.multModifiers(stat) + self.addModifiers(stat))
+        except KeyError as e:
+            raise KeyError("Could not compute {}'s {}\nStat Points: {!s}\nBase Points: {!s}\nPoints Values: {!s}".format(self.name, stat, self.statPoints, self.basePoints, self.baseStats))
 
     # Returns the characters hp STAT, i.e. their MAXIMUM health, NOT their current health. Use the self.health attribute for that.
     def hp(self):
