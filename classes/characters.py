@@ -24,7 +24,7 @@ def statString(stats):
 class Character(Vector):
     """Represents a character known to BattleBot."""
 
-    sizeTiers = {
+    _sizeTiers = {
             'crate': 0,
             'faerie': 1,
             'elf': 2,
@@ -38,32 +38,32 @@ class Character(Vector):
             'steamship': 3
             }
 
-    baseStats = {
+    _baseStats = {
             'crate': makeStatDict(1, 1, 1, 1, 1, 1, 1),
-            'faerie': statValues(sizeTiers['faerie']),    # This sets the base stats for each species to the default, computed from their size.
-            'elf': statValues(sizeTiers['elf']),          # If Lens wants different base stats for any/all races, I can hardcode that easily.
-            'human': statValues(sizeTiers['human']),      # Allowing GMs to set that up per-server is doable, but would take a bit more work.
-            'werecat': statValues(sizeTiers['werecat']),
-            'elfcat': statValues(sizeTiers['elfcat']),
-            'cyborg': statValues(sizeTiers['cyborg']),
-            'robot': statValues(sizeTiers['robot']),
-            'kraken': statValues(sizeTiers['kraken']),
-            'elfship': statValues(sizeTiers['elfship']),
-            'steamship': statValues(sizeTiers['steamship']),
+            'faerie': statValues(_sizeTiers['faerie']),    # This sets the base stats for each species to the default, computed from their size.
+            'elf': statValues(_sizeTiers['elf']),          # If Lens wants different base stats for any/all races, I can hardcode that easily.
+            'human': statValues(_sizeTiers['human']),      # Allowing GMs to set that up per-server is doable, but would take a bit more work.
+            'werecat': statValues(_sizeTiers['werecat']),
+            'elfcat': statValues(_sizeTiers['elfcat']),
+            'cyborg': statValues(_sizeTiers['cyborg']),
+            'robot': statValues(_sizeTiers['robot']),
+            'kraken': statValues(_sizeTiers['kraken']),
+            'elfship': statValues(_sizeTiers['elfship']),
+            'steamship': statValues(_sizeTiers['steamship']),
             }
 
-    basePoints = {
+    _basePoints = {
             'crate': makeStatDict(0, 0, 0, 0, 0, 0, 0),
-            'faerie': statFreePoints(sizeTiers['faerie']),
-            'elf': statFreePoints(sizeTiers['elf']),
-            'human': statFreePoints(sizeTiers['human']),
-            'werecat': statFreePoints(sizeTiers['werecat']),
-            'elfcat': statFreePoints(sizeTiers['elfcat']),
-            'cyborg': statFreePoints(sizeTiers['cyborg']),
-            'robot': statFreePoints(sizeTiers['robot']),
-            'kraken': statFreePoints(sizeTiers['kraken']),
-            'elfship': statFreePoints(sizeTiers['elfship']),
-            'steamship': statFreePoints(sizeTiers['steamship']),
+            'faerie': statFreePoints(_sizeTiers['faerie']),
+            'elf': statFreePoints(_sizeTiers['elf']),
+            'human': statFreePoints(_sizeTiers['human']),
+            'werecat': statFreePoints(_sizeTiers['werecat']),
+            'elfcat': statFreePoints(_sizeTiers['elfcat']),
+            'cyborg': statFreePoints(_sizeTiers['cyborg']),
+            'robot': statFreePoints(_sizeTiers['robot']),
+            'kraken': statFreePoints(_sizeTiers['kraken']),
+            'elfship': statFreePoints(_sizeTiers['elfship']),
+            'steamship': statFreePoints(_sizeTiers['steamship']),
             }
 
     def clearModifiers(self):
@@ -83,14 +83,15 @@ class Character(Vector):
             self.userid = owner.id
         self.name = name
         self.race = race.lower()
-        if race not in Character.sizeTiers:
+        if race not in Character._sizeTiers:
             self.size = 2
-            self.baseStats = Character.baseStats["human"]
+            self.baseStats = Character._baseStats['human']
+            self.basePoints = Character._basePoints['human']
             self.usedFallBack = True
         else:
-            self.size = Character.sizeTiers[self.race]
-            self.baseStats = Character.baseStats[self.race]
-            self.basePoints = Character.basePoints[self.race]
+            self.size = Character._sizeTiers[self.race]
+            self.baseStats = Character._baseStats[self.race]
+            self.basePoints = Character._basePoints[self.race]
             self.usedFallBack = False
         self.statPoints = statpoints
         # Modifiers are stored in this dictionary.
