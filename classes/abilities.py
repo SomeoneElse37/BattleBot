@@ -368,7 +368,7 @@ class Ability:
             if len(targets) <= self.limit and (items is None or len(items) <= self.limit):
                 for char in targets:
                     if user.distanceTo(char.pos) > self.range():
-                        raise AbilityError('{} is {:d} tiles away from you. This ability has a range of {:d}.'.format(char.name, user.distanceTo(char.pos), int(self.range())))
+                        raise AbilityError('{} is {:.2f} tiles away from you. This ability has a range of {:d}.'.format(char.name, float(user.distanceTo(char.pos)), int(self.range())))
                     if char not in participants:
                         raise AbilityError('{} is not participating in this battle!'.format(char.name))
                     if char.isDead() and 'corpse' not in self.targets:
