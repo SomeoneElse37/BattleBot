@@ -89,7 +89,7 @@ class Ability:
 
     # Compute the effective range of this ability, with a minimum of 1.5 tiles. This lets all abilities target the eight tiles immediately surrounding the user.
     def range(self):
-        return min(self.rangebonus + self.owner.ran(), 1.5)
+        return max(self.rangebonus + self.owner.ran(), 1.5)
 
     def extend(self, amt):
         self.timeout += amt
