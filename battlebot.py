@@ -884,14 +884,14 @@ async def on_message(message):
         reply = getReply(message.content, message)
         if not isinstance(reply, str):
             if not reply['error']:
-                await client.send_file(message.channel,reply['file'])
+                await client.send_file(message.channel,reply['file']) # This is invalidated in the new discord.py; use message.channel.send()
                 if reply['deleteAfterUpload']:
                     os.remove(reply['file'])
             reply = reply["message"]
         if(len(reply) != 0):
-            await client.send_message(message.channel, reply)
+            await message.channel.send(reply)
     except Exception as err:
-        await client.send_message(message.channel, "`" + traceback.format_exc() + "`")
+        await message.channel.send("`" + traceback.format_exc() + "`")
 
 try:
     client.run(token)  # Blocking call; execution will not continue until client.run() returns
