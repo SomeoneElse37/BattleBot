@@ -9,9 +9,10 @@ Type /help on any server on which Battlebot exists to get a list of the commands
 2. Click the button to **Create a Bot User**.
 3. **Click** the link **to reveal** the bot user **token**.
 4. Copy the token somewhere (e.g. to your system clipboard). You'll need it later.
-5. Make sure you have Python 3.5 or later installed on your system.
-6. Install the latest version of [https://github.com/Rapptz/discord.py](discord.py) as per manufactorer instructions.
-7. Clone this repository to anywhere you like.
+5. Make sure you have Python 3.7 or later installed on your system, as this branch of BattleBot is for Python 3.7.
+6. Install the latest version of the **rewrite** branch of [https://github.com/Rapptz/discord.py](discord.py) by running this command:  
+    python3 -m pip install -U https://github.com/Rapptz/discord.py/archive/rewrite.zip#egg=discord.py[voice]
+7. Clone the BattleBot repository to anywhere you like.
 8. Create a text file in the repo's root directory named "bot.token".
 9. Fill in this file with the token you copied earlier.
 10. You should be good to go! Simply type `python battlebot.py` to launch the bot. It will print its own invite link to the console when it starts up. Copy this link into a web browser to add the bot to your server!
